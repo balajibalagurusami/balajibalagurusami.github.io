@@ -1,0 +1,28 @@
+{
+  "updated":"2026-08-21",
+  "source":"N. Subramanian, Design of Steel Structures: Limit State Method",
+  "strict_rule":"A chapter is covered only when every contents-list topic has a source-grounded lesson and knowledge check.",
+  "topic_inventory":{"tracked":306,"total":306},
+  "appendices_tracked":6,
+  "detailed_lessons":24,
+  "chapters":[
+    {"chapter":1,"title":"Materials, Structures, and Specifications","status":"covered","covered_topics":24,"total_topics":24},
+    {"chapter":2,"title":"The Basis of Structural Design","status":"tracked","covered_topics":0,"total_topics":12},
+    {"chapter":3,"title":"Loading and Load Combinations","status":"tracked","covered_topics":0,"total_topics":20},
+    {"chapter":4,"title":"Methods of Structural Analysis","status":"tracked","covered_topics":0,"total_topics":12},
+    {"chapter":5,"title":"Bolted Connections","status":"tracked","covered_topics":0,"total_topics":17},
+    {"chapter":6,"title":"Welded Connections","status":"tracked","covered_topics":0,"total_topics":23},
+    {"chapter":7,"title":"Design of Tension Members","status":"tracked","covered_topics":0,"total_topics":20},
+    {"chapter":8,"title":"Plastic and Local Buckling Behaviour of Structural Steel","status":"tracked","covered_topics":0,"total_topics":19},
+    {"chapter":9,"title":"Design of Compression Members","status":"tracked","covered_topics":0,"total_topics":24},
+    {"chapter":10,"title":"Design of Beams","status":"tracked","covered_topics":0,"total_topics":26},
+    {"chapter":11,"title":"Design of Plate Girders","status":"tracked","covered_topics":0,"total_topics":20},
+    {"chapter":12,"title":"Gantry Girders","status":"tracked","covered_topics":0,"total_topics":10},
+    {"chapter":13,"title":"Design of Beam-columns","status":"tracked","covered_topics":0,"total_topics":17},
+    {"chapter":14,"title":"Design of Industrial Buildings","status":"tracked","covered_topics":0,"total_topics":13},
+    {"chapter":15,"title":"Corrosion Protection of Steel Structures","status":"tracked","covered_topics":0,"total_topics":7},
+    {"chapter":16,"title":"Fire-resistant Design","status":"tracked","covered_topics":0,"total_topics":16},
+    {"chapter":17,"title":"Fatigue-resistant Design","status":"tracked","covered_topics":0,"total_topics":13},
+    {"chapter":18,"title":"Design for Torsion","status":"tracked","covered_topics":0,"total_topics":13}
+  ]
+}
