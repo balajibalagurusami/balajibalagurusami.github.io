@@ -1,0 +1,43 @@
+{
+  "course": "Dynamics of Structures",
+  "version": "Lectures 1–4 assignment prep",
+  "source_lectures": 4,
+  "tracked_topics": 68,
+  "source_grounded_topics": 68,
+  "coverage": "4/4 lectures fully source-grounded",
+  "strict_rule": "Every tracked topic in a lecture must have a source-grounded micro-lesson and knowledge check before that lecture is marked Covered.",
+  "lectures": [
+    {
+      "lecture": 1,
+      "title": "Overview of Structural Dynamics",
+      "source": "Lecture 1 • 25 Jul 2026 • pp.1–6",
+      "topics": 12,
+      "covered": 12,
+      "status": "Covered"
+    },
+    {
+      "lecture": 2,
+      "title": "Formulation of Equation of Motion",
+      "source": "Lecture 2 • 01 Aug 2026 • pp.1–12",
+      "topics": 17,
+      "covered": 17,
+      "status": "Covered"
+    },
+    {
+      "lecture": 3,
+      "title": "Stiffness and Natural Frequencies",
+      "source": "Lecture 3 • 08 Aug 2026 • pp.1–9",
+      "topics": 15,
+      "covered": 15,
+      "status": "Covered"
+    },
+    {
+      "lecture": 4,
+      "title": "Free Vibration Response",
+      "source": "Lecture 4 • 18 Aug 2026 • pp.1–17",
+      "topics": 24,
+      "covered": 24,
+      "status": "Covered"
+    }
+  ]
+}
