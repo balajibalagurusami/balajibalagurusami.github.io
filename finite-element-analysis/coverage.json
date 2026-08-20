@@ -1,0 +1,146 @@
+{
+  "updated": "2026-08-21",
+  "course": "ST ZG619 Finite Element Analysis",
+  "sources": [
+    "BITS Pilani WILP ST ZG619 Digital Learning Handout, First Semester 2026–2027",
+    "J. N. Reddy, An Introduction to the Finite Element Method, 3rd ed."
+  ],
+  "source_scope_note": "The supplied Reddy PDF is a 150-page scan containing the front matter, Chapters 1–2 and Chapter 3 through book page 134. Later course sessions are therefore tracked from the handout but are not labelled as detailed source-covered lessons in this version.",
+  "strict_rule": "A session is labelled Covered only when every tracked topic in that session has a source-grounded micro-lesson and knowledge check.",
+  "topic_inventory": {
+    "tracked": 63,
+    "total": 63
+  },
+  "detailed_lessons": 36,
+  "midsem_scope": "Contact sessions 1–8",
+  "sessions": [
+    {
+      "session": 1,
+      "title": "Introduction",
+      "status": "covered",
+      "covered_topics": 14,
+      "total_topics": 14,
+      "reference": "T1 Ch-1 and Ch-2, T2 Ch-1"
+    },
+    {
+      "session": 2,
+      "title": "Finite element formulation – 1D bar problem",
+      "status": "covered",
+      "covered_topics": 12,
+      "total_topics": 12,
+      "reference": "T1 Ch-3, T2 Ch-2, Ch-3"
+    },
+    {
+      "session": 3,
+      "title": "Numerical problems",
+      "status": "covered",
+      "covered_topics": 10,
+      "total_topics": 10,
+      "reference": "T1 Ch-3, T2 Ch-2, Ch-3"
+    },
+    {
+      "session": 4,
+      "title": "Truss elements",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 2,
+      "reference": "T1 Ch-4, T2 Ch-2, Ch-3"
+    },
+    {
+      "session": 5,
+      "title": "Beam elements",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 2,
+      "reference": "T1 Ch-5, T2 Ch-4"
+    },
+    {
+      "session": 6,
+      "title": "Numerical problems",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 1,
+      "reference": "T1 Ch-5, T2 Ch-4"
+    },
+    {
+      "session": 7,
+      "title": "Frame elements",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 2,
+      "reference": "T1 Ch-5, T2 Ch-5"
+    },
+    {
+      "session": 8,
+      "title": "Isoparametric formulation",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 1,
+      "reference": "T1 Ch-8, T2 Ch-10"
+    },
+    {
+      "session": 9,
+      "title": "Introduction 2D finite elements",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 5,
+      "reference": "T1 Ch-11, T2 Ch-6, 7, 8, 10"
+    },
+    {
+      "session": 10,
+      "title": "Axisymmetric problems",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 1,
+      "reference": "Class Notes, T2 Ch-9"
+    },
+    {
+      "session": 11,
+      "title": "2D numerical examples",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 1,
+      "reference": "T1 Ch-9, Ch-11, T2 Ch-6, 7, 8"
+    },
+    {
+      "session": 12,
+      "title": "Finite element formulation of plate bending",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 2,
+      "reference": "T1 Ch-12, T2 Ch-12"
+    },
+    {
+      "session": 13,
+      "title": "Shell finite elements",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 1,
+      "reference": "Class Notes"
+    },
+    {
+      "session": 14,
+      "title": "Mixed Finite elements",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 1,
+      "reference": "Class Notes"
+    },
+    {
+      "session": 15,
+      "title": "Material and Geometric nonlinearity",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 2,
+      "reference": "Class Notes"
+    },
+    {
+      "session": 16,
+      "title": "Dynamic analysis using FEM, Programming FEM",
+      "status": "tracked",
+      "covered_topics": 0,
+      "total_topics": 6,
+      "reference": "T1 Ch-6, Ch-7"
+    }
+  ]
+}

@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#102a43">
+<title>FEA Quest — ST ZG619</title>
+<style>
+:root{--ink:#102a43;--ink2:#243b53;--bg:#f4f7fb;--line:#d9e2ec;--green:#2f9e44;--green2:#e9f8ed;--blue:#eaf2ff;--blue2:#2f6fdd;--muted:#627d98;--amber:#fff4ce;--red:#fff0f0;--white:#fff}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;margin:0;background:var(--bg);color:var(--ink);-webkit-tap-highlight-color:transparent}
+button,input{font:inherit}
+button{touch-action:manipulation}
+.wrap{max-width:860px;margin:auto;padding:14px 14px calc(92px + env(safe-area-inset-bottom))}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.brand b{font-size:18px}.small{font-size:13px;color:var(--muted);line-height:1.35}
+.stats{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.pill,.card{background:#fff;border:1px solid var(--line);border-radius:18px}
+.pill{padding:9px 11px;font-weight:800}
+.hero{background:linear-gradient(145deg,var(--ink),var(--ink2));color:#fff;padding:22px;border-radius:24px;box-shadow:0 10px 32px #102a431c}
+.hero h1{margin:.2rem 0 .4rem;font-size:clamp(28px,7vw,43px);line-height:1.02}
+.hero p{margin:.5rem 0 0;line-height:1.45}
+.hero .small{color:#c9d6e2}
+.hero-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.primary,.secondary{border:0;border-radius:13px;padding:12px 14px;font-weight:900}
+.primary{background:#fff;color:var(--ink);flex:1;min-width:200px}
+.secondary{background:#ffffff16;color:#fff;border:1px solid #ffffff33}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.metric{background:#ffffff10;border:1px solid #ffffff20;padding:10px;border-radius:14px;min-width:0}
+.metric b{font-size:20px;display:block;white-space:nowrap}
+.metric span{font-size:12px;color:#d9e2ec}
+.bar{height:9px;background:#334e68;border-radius:99px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;background:#63e6be}
+.next-exam{margin-top:12px;padding:11px 12px;border:1px solid #ffffff25;border-radius:14px;background:#ffffff0d}
+.tabs{display:flex;gap:8px;margin:14px 0;position:sticky;top:0;padding:8px 0;background:linear-gradient(var(--bg) 78%,transparent);z-index:5}
+.tab{flex:1;border:1px solid var(--line);background:#fff;padding:11px 8px;border-radius:12px;font-weight:850}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.search{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:14px;background:#fff;margin-bottom:10px}
+.chapter{background:#fff;border:1px solid var(--line);border-radius:18px;margin:10px 0;overflow:hidden}
+.chhead{width:100%;border:0;background:#fff;text-align:left;padding:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;color:inherit}
+.chhead h3{margin:0 0 4px;font-size:17px}.chhead .ref{margin-top:4px}
+.badges{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.badge{font-size:11px;font-weight:850;padding:6px 8px;border-radius:999px;background:#eef2f7;white-space:nowrap}
+.badge.covered{background:#e7f8e7;color:#207a20}.badge.partial{background:#fff3cf;color:#8a5b00}.badge.mid{background:#eaf2ff;color:#2457a7}
+.topiclist{display:none;border-top:1px solid var(--line);padding:8px}.chapter.open .topiclist{display:block}
+.topic{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid #eef1f5}.topic:last-child{border-bottom:0}.topic.done{background:#f4fcf5}
+.topicname{font-size:14px;line-height:1.25}.status{font-size:11px;color:var(--muted);margin-top:4px}
+.go{border:0;border-radius:10px;padding:9px 10px;font-weight:850;background:#edf0f5;color:var(--ink);white-space:nowrap}.go.deep{background:var(--green);color:#fff}
+.audit,.deadline-list{padding:14px}.audit p{line-height:1.45}
+.progress-row{display:grid;grid-template-columns:44px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #edf0f5}.progress-row:last-child{border:0}
+.mini{height:8px;background:#edf2f7;border-radius:99px;overflow:hidden}.mini i{display:block;height:100%;background:var(--green)}
+.deadline{padding:13px 0;border-bottom:1px solid #edf0f5}.deadline:last-child{border:0}.deadline b{display:block}.deadline .when{font-size:13px;margin-top:3px}
+.footer{margin-top:18px;padding:16px}.footer button{margin-top:8px}
+.modal{display:none;position:fixed;inset:0;background:#0009;align-items:end;z-index:30}.modal.show{display:flex}
+.sheet{background:#fff;width:100%;max-width:860px;margin:auto;padding:18px 18px calc(18px + env(safe-area-inset-bottom));border-radius:22px 22px 0 0;max-height:92vh;overflow:auto}
+.modalbar{display:flex;justify-content:space-between;gap:10px;align-items:center;position:sticky;top:-18px;background:#fff;padding:10px 0;z-index:2}
+.close{border:0;background:#edf0f5;border-radius:10px;padding:9px 11px}
+.step{font-size:12px;font-weight:900;color:var(--blue2);text-transform:uppercase;letter-spacing:.04em}
+.choice{width:100%;margin:6px 0;padding:13px;border:1px solid #ccd3df;background:#fff;border-radius:12px;text-align:left;color:inherit}.choice.good{background:#e9fbe9;border-color:#55a630}.choice.bad{background:#ffecec;border-color:#e76f51}
+.feedback{margin:10px 0;font-weight:850;line-height:1.4}
+.reveal,.continue,.mark{width:100%;margin-top:10px;padding:12px;border-radius:12px;font-weight:900}
+.reveal{border:1px solid #9aa5b1;background:#f8fafc;display:none}.explanation{display:none;margin-top:10px;padding:14px;border-radius:12px;background:var(--blue);border:1px solid #bfd3ff;line-height:1.5}.source{margin-top:8px;font-size:12px;color:#526d82}
+.continue{border:0;background:var(--ink);color:#fff;display:none}.mark{border:0;background:var(--green);color:#fff}
+.warn{background:var(--amber);border:1px solid #ecd37f;padding:12px;border-radius:12px;line-height:1.45}
+.scope-note{background:#fff7e6;border:1px solid #f0c36d;padding:12px;border-radius:13px;margin-top:10px;line-height:1.45}
+.hide{display:none!important}
+@media(max-width:640px){.metrics{grid-template-columns:1fr 1fr}.top{align-items:flex-start}.stats{max-width:170px}.chhead{align-items:flex-start}.topic{align-items:flex-start}.badges{max-width:140px}.tabs{gap:5px}.tab{font-size:13px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><b>FEA Quest</b><div class="small">Finite Element Analysis • ST ZG619</div></div>
+    <div class="stats"><span class="pill">🔥 <span id="streak">0</span></span><span class="pill">❤️ <span id="hearts">5</span></span><span class="pill">⚡ <span id="xp">0</span></span></div>
+  </div>
+
+  <section class="hero">
+    <div class="small">BITS Pilani WILP • 16-session course journey • source-grounded baby steps</div>
+    <h1>FEA, one tiny step at a time.</h1>
+    <p>Start with element, node and DOF. Build toward weak forms, matrices, assembly and the full ST ZG619 course without pretending an uncovered topic is already mastered.</p>
+    <div class="hero-actions">
+      <button class="primary" onclick="resumeJourney()">▶ Continue baby steps</button>
+      <button class="secondary" onclick="openFirstIncomplete()">Find next lesson</button>
+    </div>
+    <div class="metrics">
+      <div class="metric"><b id="inventory">0</b><span>topics tracked</span></div>
+      <div class="metric"><b id="sourceCoverage">0/16</b><span>sessions source-covered</span></div>
+      <div class="metric"><b id="myProgress">0%</b><span>your revision</span></div>
+      <div class="metric"><b id="midsemProgress">0%</b><span>mid-sem scope</span></div>
+    </div>
+    <div class="bar"><i id="bar" style="width:0%"></i></div>
+    <div class="next-exam"><b id="nextExamTitle">Next evaluation</b><div class="small" id="nextExamText"></div></div>
+  </section>
+
+  <div class="tabs">
+    <button id="journeyTab" class="tab on" onclick="setTab('journey')">Journey</button>
+    <button id="coverageTab" class="tab" onclick="setTab('coverage')">Coverage</button>
+    <button id="deadlinesTab" class="tab" onclick="setTab('deadlines')">Deadlines</button>
+  </div>
+
+  <input id="search" class="search" placeholder="Search all FEA topics…" oninput="render()">
+  <div id="audit" class="card audit hide"></div>
+  <div id="deadlines" class="card deadline-list hide"></div>
+  <div id="chapters"></div>
+
+  <section class="card footer">
+    <b>Progress stays on this device</b>
+    <p class="small">XP, streak, hearts and reviewed topics are stored in your browser with localStorage. A small first-party cookie remembers the last active date.</p>
+    <button class="go" onclick="share()">Share course link</button>
+    <button class="go" onclick="resetProgress()">Reset my progress</button>
+  </section>
+</div>
+
+<div id="modal" class="modal"><div class="sheet">
+  <div class="modalbar"><span class="small">FEA Quest</span><button class="close" onclick="closeM()">Close</button></div>
+  <div id="body"></div>
+</div></div>
+
+<script src="course-data.js"></script>
+<script>
+const KEY='feaquest-stzg619-v1';
+let s=JSON.parse(localStorage.getItem(KEY)||'null')||{xp:0,hearts:5,streak:0,last:'',done:{},lastLesson:''};
+let tab='journey';
+const all=FEA_COURSE.flatMap(c=>c.topics.map(t=>({s:c.n,session:c.title,t,id:`${c.n}:${t}`,deep:!!FEA_DEEP[`${c.n}:${t}`]})));
+const total=all.length;
+const deepAll=all.filter(x=>x.deep);
+
+const el=id=>document.getElementById(id);
+function lessonCount(c){return c.topics.filter(t=>FEA_DEEP[`${c.n}:${t}`]).length}
+function coveredSessions(){return FEA_COURSE.filter(c=>lessonCount(c)===c.topics.length)}
+function reviewedCount(items){return items.filter(x=>s.done[x.id]).length}
+function touch(){
+  const d=new Date().toISOString().slice(0,10);
+  if(s.last===d)return;
+  const y=new Date();y.setDate(y.getDate()-1);
+  s.streak=s.last===y.toISOString().slice(0,10)?s.streak+1:1;s.last=d;
+}
+function save(){
+  localStorage.setItem(KEY,JSON.stringify(s));
+  document.cookie='feaquest_last='+encodeURIComponent(s.last||'')+';max-age=31536000;path=/;SameSite=Lax';
+  render();
+}
+function setTab(x){
+  tab=x;
+  el('journeyTab').classList.toggle('on',x==='journey');
+  el('coverageTab').classList.toggle('on',x==='coverage');
+  el('deadlinesTab').classList.toggle('on',x==='deadlines');
+  el('audit').classList.toggle('hide',x!=='coverage');
+  el('deadlines').classList.toggle('hide',x!=='deadlines');
+  el('search').classList.toggle('hide',x==='deadlines');
+  render();
+}
+function dateLabel(x){
+  const d=new Date(x+'T00:00:00');
+  return d.toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+}
+function daysFromToday(x){
+  const a=new Date();a.setHours(0,0,0,0);
+  const b=new Date(x+'T00:00:00');
+  return Math.ceil((b-a)/86400000);
+}
+function nextMilestone(){
+  const today=new Date();today.setHours(0,0,0,0);
+  return FEA_MILESTONES.find(m=>new Date((m.end||m.date)+'T23:59:59')>=today)||FEA_MILESTONES[FEA_MILESTONES.length-1];
+}
+function renderHero(){
+  el('xp').textContent=s.xp;el('hearts').textContent=s.hearts;el('streak').textContent=s.streak;
+  el('inventory').textContent=total;el('sourceCoverage').textContent=`${coveredSessions().length}/16`;
+  const d=Object.keys(s.done).length,p=Math.round(d/total*100);el('myProgress').textContent=p+'%';el('bar').style.width=p+'%';
+  const mid=all.filter(x=>x.s<=8),mp=Math.round(reviewedCount(mid)/mid.length*100);el('midsemProgress').textContent=mp+'%';
+  const n=nextMilestone(),days=daysFromToday(n.date);
+  el('nextExamTitle').textContent=n.name;
+  let time=days>1?`${days} days to start`:days===1?'Tomorrow':days===0?'Today':`${dateLabel(n.date)}`;
+  if(n.end && days<0 && daysFromToday(n.end)>=0) time=`Open now • closes ${dateLabel(n.end)}`;
+  el('nextExamText').textContent=`${time} • ${n.weight} • ${n.type}${n.scope?' • '+n.scope:''}`;
+}
+function renderAudit(){
+  const deep=deepAll.length;
+  el('audit').innerHTML=`
+    <b>Strict source coverage audit</b>
+    <p><b>${total}/${total}</b> course topics are inventoried from the ST ZG619 learning plan. <b>${deep}/${total}</b> currently have detailed source-grounded micro-lessons. <b>${coveredSessions().length}/16</b> sessions meet the strict “Covered” rule.</p>
+    <div class="scope-note">${FEA_SOURCE_SCOPE.uploaded_text_scope}</div>
+    <div id="coverageRows"></div>`;
+  const host=el('coverageRows');
+  FEA_COURSE.forEach(c=>{
+    const n=lessonCount(c),pct=Math.round(n/c.topics.length*100);
+    host.insertAdjacentHTML('beforeend',`<div class="progress-row"><b>S${c.n}</b><div><div class="mini"><i style="width:${pct}%"></i></div><div class="small">${c.title}</div></div><span class="small">${n}/${c.topics.length}</span></div>`)
+  });
+}
+function renderDeadlines(){
+  el('deadlines').innerHTML='<b>Evaluation journey</b>'+FEA_MILESTONES.map(m=>{
+    let when=m.end?`${dateLabel(m.date)} – ${dateLabel(m.end)}`:dateLabel(m.date);
+    return `<div class="deadline"><b>${m.name} • ${m.weight}</b><div class="when">${when} • ${m.type}${m.duration?' • '+m.duration:''}</div>${m.scope?`<div class="small">${m.scope}</div>`:''}</div>`
+  }).join('')+'<p class="small">Dates and weights are taken from the ST ZG619 course handout.</p>';
+}
+function renderJourney(){
+  const host=el('chapters');host.innerHTML='';
+  if(tab==='deadlines')return;
+  const q=(el('search').value||'').trim().toLowerCase();
+  FEA_COURSE.forEach(c=>{
+    const matches=c.topics.filter(t=>!q||t.toLowerCase().includes(q)||c.title.toLowerCase().includes(q)||c.sub.toLowerCase().includes(q));
+    if(!matches.length)return;
+    const deep=lessonCount(c),covered=deep===c.topics.length,reviewed=c.topics.filter(t=>s.done[`${c.n}:${t}`]).length;
+    const section=document.createElement('section');
+    section.className='chapter'+(q?' open':'');
+    section.innerHTML=`<button class="chhead">
+      <div><h3>Session ${c.n}. ${c.title}</h3><div class="small">${c.sub}</div><div class="small ref">Lesson coverage ${deep}/${c.topics.length} • You reviewed ${reviewed}/${c.topics.length}</div></div>
+      <div class="badges">${c.n<=8?'<span class="badge mid">MID-SEM</span>':''}<span class="badge ${covered?'covered':deep?'partial':''}">${covered?'✓ Covered':deep?'Partial':'Tracked'}</span></div>
+    </button><div class="topiclist"></div>`;
+    section.querySelector('.chhead').onclick=()=>section.classList.toggle('open');
+    const list=section.querySelector('.topiclist');
+    matches.forEach(t=>{
+      const id=`${c.n}:${t}`,lesson=FEA_DEEP[id],done=!!s.done[id];
+      const row=document.createElement('div');row.className='topic'+(done?' done':'');
+      row.innerHTML=`<div><div class="topicname">${done?'✅ ':''}${t}</div><div class="status">${lesson?`${lesson.step} • ${lesson.source}`:'Tracked from handout — detailed source lesson pending'}</div></div><button class="go ${lesson?'deep':''}">${lesson?'Revise':'Checkpoint'}</button>`;
+      row.querySelector('button').onclick=()=>lesson?openDeep(c,t,id,lesson):openCheckpoint(c,t,id);
+      list.appendChild(row);
+    });
+    host.appendChild(section);
+  });
+}
+function render(){
+  renderHero();
+  if(tab==='coverage')renderAudit();
+  if(tab==='deadlines')renderDeadlines();
+  renderJourney();
+}
+function openDeep(c,t,id,l){
+  s.lastLesson=id;localStorage.setItem(KEY,JSON.stringify(s));
+  el('body').innerHTML=`<div class="step">${l.step}</div><div class="small">Session ${c.n} • ${c.title}</div><h2>${t}</h2><h3>${l.q}</h3><div id="opts"></div><div id="feedback" class="feedback"></div><button id="reveal" class="reveal" onclick="toggleExplanation()">Reveal explanation</button><div id="explanation" class="explanation">${l.e}<div class="source">Source: ${l.source}</div></div><button id="continueBtn" class="continue" onclick="continueJourney('${jsEsc(id)}')">Continue to next lesson</button>`;
+  l.o.forEach((o,i)=>{
+    const b=document.createElement('button');b.className='choice';b.textContent=o;b.onclick=()=>answer(b,i,id,l);el('opts').appendChild(b);
+  });
+  el('modal').classList.add('show');
+}
+function answer(b,i,id,l){
+  if(b.disabled)return;
+  el('reveal').style.display='block';
+  if(i===l.a){
+    b.classList.add('good');el('feedback').textContent='Correct.';
+    [...el('opts').children].forEach(x=>x.disabled=true);
+    if(!s.done[id]){touch();s.done[id]=1;s.xp+=10;s.hearts=Math.min(5,s.hearts+1);save()}
+    el('continueBtn').style.display='block';
+  }else{
+    b.classList.add('bad');b.disabled=true;el('feedback').textContent='Not quite. Try another choice, or reveal the explanation.';
+    s.hearts=Math.max(0,s.hearts-1);save();
+  }
+}
+function toggleExplanation(){
+  const box=el('explanation'),btn=el('reveal'),open=box.style.display==='block';
+  box.style.display=open?'none':'block';btn.textContent=open?'Reveal explanation':'Hide explanation';
+}
+function openCheckpoint(c,t,id){
+  el('body').innerHTML=`<div class="small">Session ${c.n} • ${c.title}</div><h2>${t}</h2><div class="warn"><b>This topic is tracked, but it is not being claimed as source-covered yet.</b><br><br>The course handout requires this topic, but the supplied Reddy scan does not include the later referenced chapter/class-note material. Keeping the checkpoint visible prevents it from disappearing from your study plan.</div><button class="mark" onclick="markReviewed('${jsEsc(id)}')">Mark my own review done (+5 XP)</button>`;
+  el('modal').classList.add('show');
+}
+function markReviewed(id){if(!s.done[id]){touch();s.done[id]=1;s.xp+=5;save()}closeM()}
+function jsEsc(x){return x.replaceAll('\\','\\\\').replaceAll("'","\\'")}
+function closeM(){el('modal').classList.remove('show')}
+function nextDeepAfter(id){
+  const idx=deepAll.findIndex(x=>x.id===id);
+  if(idx<0)return deepAll.find(x=>!s.done[x.id])||deepAll[0];
+  for(let k=1;k<=deepAll.length;k++){const x=deepAll[(idx+k)%deepAll.length];if(!s.done[x.id])return x}
+  return deepAll[(idx+1)%deepAll.length];
+}
+function continueJourney(id){
+  const x=nextDeepAfter(id);closeM();if(!x)return;const c=FEA_COURSE.find(z=>z.n===x.s);openDeep(c,x.t,x.id,FEA_DEEP[x.id]);
+}
+function openFirstIncomplete(){
+  const x=deepAll.find(y=>!s.done[y.id])||deepAll[0];if(!x)return;
+  const c=FEA_COURSE.find(z=>z.n===x.s);openDeep(c,x.t,x.id,FEA_DEEP[x.id]);
+}
+function resumeJourney(){
+  let x=s.lastLesson?deepAll.find(y=>y.id===s.lastLesson):null;
+  if(x&&s.done[x.id])x=nextDeepAfter(x.id);
+  if(!x)x=deepAll.find(y=>!s.done[y.id])||deepAll[0];
+  if(!x)return;const c=FEA_COURSE.find(z=>z.n===x.s);openDeep(c,x.t,x.id,FEA_DEEP[x.id]);
+}
+async function share(){
+  try{if(navigator.share)await navigator.share({title:'FEA Quest — ST ZG619',url:location.href});else{await navigator.clipboard.writeText(location.href);alert('Link copied')}}catch(e){}
+}
+function resetProgress(){if(confirm('Reset all FEA Quest progress on this device?')){localStorage.removeItem(KEY);location.reload()}}
+el('modal').addEventListener('click',e=>{if(e.target===el('modal'))closeM()});
+render();
+</script>
+</body>
+</html>
