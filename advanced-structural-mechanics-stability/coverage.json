@@ -1,0 +1,26 @@
+{
+  "course": "Advanced Structural Mechanics and Stability",
+  "course_no": "ST ZG552",
+  "sessions": 16,
+  "mid_sem_scope": "Contact Sessions 1 to 8",
+  "comprehensive_scope": "All topics",
+  "source_policy": "Only lessons directly supported by the uploaded handout detail or lecture screenshots count as strict source-grounded coverage. Standard prerequisite/model supplements are labelled separately.",
+  "strict_source_covered_sessions": [3],
+  "supplemental_sessions": [1, 2, 4],
+  "tracked_only_sessions": [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+  "current_uploaded_detail": [
+    "3D stress tensor cube and 3 x 3 tensor notation",
+    "Example stress tensor [[3,2,15],[2,-7,-16],[15,-16,-1]] MPa",
+    "Traction on a given plane",
+    "Body force example: self weight",
+    "Surface force example: distributed load over a surface",
+    "Plane orientation vector n",
+    "Traction split into normal part sigma_n and shear part tau"
+  ],
+  "evaluations": [
+    {"name":"Quiz","weight":"10%","window":"2026-08-10 to 2026-08-20","type":"Online"},
+    {"name":"Assignment","weight":"25%","window":"2026-08-27 to 2026-09-07","type":"Online"},
+    {"name":"Mid-Semester Test","weight":"25%","date":"2026-09-19","duration":"2 hours","type":"Closed Book"},
+    {"name":"Comprehensive Exam","weight":"40%","date":"2026-12-05","duration":"2.5 hours","type":"Open Book"}
+  ]
+}
