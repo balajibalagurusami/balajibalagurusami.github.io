@@ -4,12 +4,15 @@
   "strict_rule":"A chapter is covered only when every contents-list topic has a source-grounded lesson and knowledge check.",
   "topic_inventory":{"tracked":306,"total":306},
   "appendices_tracked":6,
-  "detailed_lessons":36,
-  "source_limitations":["The textbook is a scanned image PDF, so Chapter 2 completion was verified from rendered source pages rather than extracted machine text. No Chapter 2 contents-list topic remains ungrounded."],
+  "detailed_lessons":56,
+  "source_limitations":[
+    "The textbook is a scanned image PDF, so Chapter 2 completion was verified from rendered source pages rather than extracted machine text. No Chapter 2 contents-list topic remains ungrounded.",
+    "Chapter 3 is also image-based. All 20 contents-list topics were checked against rendered textbook pages 131-264 before being marked covered. The wind-code lesson follows the IS 875 (Part 3) formulation printed in this textbook edition; it is a textbook-revision lesson, not a claim that the cited edition is the latest code revision."
+  ],
   "chapters":[
     {"chapter":1,"title":"Materials, Structures, and Specifications","status":"covered","covered_topics":24,"total_topics":24},
     {"chapter":2,"title":"The Basis of Structural Design","status":"covered","covered_topics":12,"total_topics":12},
-    {"chapter":3,"title":"Loading and Load Combinations","status":"tracked","covered_topics":0,"total_topics":20},
+    {"chapter":3,"title":"Loading and Load Combinations","status":"covered","covered_topics":20,"total_topics":20},
     {"chapter":4,"title":"Methods of Structural Analysis","status":"tracked","covered_topics":0,"total_topics":12},
     {"chapter":5,"title":"Bolted Connections","status":"tracked","covered_topics":0,"total_topics":17},
     {"chapter":6,"title":"Welded Connections","status":"tracked","covered_topics":0,"total_topics":23},
