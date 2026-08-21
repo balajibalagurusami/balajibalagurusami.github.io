@@ -4,7 +4,7 @@
   "strict_rule": "A chapter is covered only when every contents-list topic has a source-grounded lesson and knowledge check.",
   "topic_inventory": {"tracked": 306, "total": 306},
   "appendices_tracked": 6,
-  "detailed_lessons": 147,
+  "detailed_lessons": 171,
   "source_limitations": [
     "The textbook is a scanned image PDF, so Chapter 2 completion was verified from rendered source pages rather than extracted machine text. No Chapter 2 contents-list topic remains ungrounded.",
     "Chapter 3 is also image-based. All 20 contents-list topics were checked against rendered textbook pages 131-264 before being marked covered. The wind-code lesson follows the IS 875 (Part 3) formulation printed in this textbook edition; it is a textbook-revision lesson, not a claim that the cited edition is the latest code revision.",
@@ -12,7 +12,8 @@
     "Chapter 5 is image-based. All 17 contents-list topics were verified against rendered textbook pages 324-433 before being marked covered. The lessons follow the bolt, pin and connection provisions and terminology presented in this textbook edition; where the chapter refers to IS 800 or BS 5950 provisions, the revision content reflects the book's presentation rather than asserting that those cited provisions are the latest code requirements.",
     "Chapter 6 is image-based. All 23 contents-list topics were checked against rendered textbook pages 437-551 before being marked covered. The revision lessons follow the welding processes, electrode classification, weld specifications, connection-design methods and code references as presented in this textbook edition; cited IS 800/IS 816 provisions are treated as textbook content rather than a claim that every referenced provision is the latest code wording.",
     "Chapter 7 is image-based. All 20 contents-list topics were checked against rendered textbook pages 554-606 before being marked covered. The lessons follow the tension-member formulas, effective-net-area concepts, shear-lag treatment, lug-angle provisions and other code references as presented in this textbook edition; these are textbook-revision lessons rather than a claim that every cited code provision is the latest wording.",
-    "Chapter 8 is image-based. All 19 contents-list topics were verified against rendered textbook pages 608-681, with the separately uploaded Chapter 8 worked-solution document used only to cross-check exercise/application content. The lessons follow the plastic-analysis, stability, section-classification and effective-width treatment as presented in this textbook edition; cited IS 800/BS 5950 provisions are textbook-revision content rather than a claim that every cited provision is the latest wording."
+    "Chapter 8 is image-based. All 19 contents-list topics were verified against rendered textbook pages 608-681, with the separately uploaded Chapter 8 worked-solution document used only to cross-check exercise/application content. The lessons follow the plastic-analysis, stability, section-classification and effective-width treatment as presented in this textbook edition; cited IS 800/BS 5950 provisions are textbook-revision content rather than a claim that every cited provision is the latest wording.",
+    "Chapter 9 is image-based. All 24 contents-list topics were verified against rendered textbook pages 683-804 before being marked covered. The revision lessons follow the textbook treatment of Euler and inelastic buckling, multiple column curves, effective length, single-angle and built-up struts, bases, special materials and displacement. Any IS 800, AISC, BS 5950 or other code references are treated as the provisions presented in this textbook edition, not as confirmation of the latest code wording."
   ],
   "chapters": [
     {"chapter": 1, "title": "Materials, Structures, and Specifications", "status": "covered", "covered_topics": 24, "total_topics": 24},
@@ -23,7 +24,7 @@
     {"chapter": 6, "title": "Welded Connections", "status": "covered", "covered_topics": 23, "total_topics": 23},
     {"chapter": 7, "title": "Design of Tension Members", "status": "covered", "covered_topics": 20, "total_topics": 20},
     {"chapter": 8, "title": "Plastic and Local Buckling Behaviour of Structural Steel", "status": "covered", "covered_topics": 19, "total_topics": 19},
-    {"chapter": 9, "title": "Design of Compression Members", "status": "tracked", "covered_topics": 0, "total_topics": 24},
+    {"chapter": 9, "title": "Design of Compression Members", "status": "covered", "covered_topics": 24, "total_topics": 24},
     {"chapter": 10, "title": "Design of Beams", "status": "tracked", "covered_topics": 0, "total_topics": 26},
     {"chapter": 11, "title": "Design of Plate Girders", "status": "tracked", "covered_topics": 0, "total_topics": 20},
     {"chapter": 12, "title": "Gantry Girders", "status": "tracked", "covered_topics": 0, "total_topics": 10},
