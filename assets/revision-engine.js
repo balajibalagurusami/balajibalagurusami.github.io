@@ -116,11 +116,16 @@
 
   function openQuestion(c, topic, topicKey, q, index) {
     const id = qid(topicKey,q,index);
+    const rows = allRows();
+    const position = rows.findIndex(r => r.id === id);
+    const previous = position > 0 ? rows[position - 1] : null;
+    const next = position >= 0 && position < rows.length - 1 ? rows[position + 1] : null;
     const modal = document.getElementById('modal');
     const body = document.getElementById('modalBody');
+    const sheet = modal.querySelector('.sheet');
     const choices = (q.choices || []).map((o,i)=>`<button class="choice" data-i="${i}" type="button">${renderRich(o)}</button>`).join('');
     body.innerHTML = `
-      <div class="crumb">${esc(cfg.sectionLabel || 'Chapter')} ${esc(c.n)} · ${esc(c.title)}</div>
+      <div class="crumb">${esc(cfg.sectionLabel || 'Chapter')} ${esc(c.n)} · ${esc(c.title)} · Question ${position + 1} of ${rows.length}</div>
       <div class="level">${esc(q.level || 'practice')} · ${esc(q.kind || 'mcq')}</div>
       <h2>${esc(topic)}</h2>
       <h3 class="prompt">${renderRich(q.q || q.prompt || '')}</h3>
@@ -131,7 +136,11 @@
       <div id="feedback" class="feedback"></div>
       <button id="reveal" class="reveal" type="button">Reveal explanation</button>
       <div id="explanation" class="explanation">${renderRich(q.explanation || '')}${q.derivation ? `<div class="derivation">${renderRich(q.derivation)}</div>`:''}${q.source ? `<div class="source">Source: ${esc(q.source)}</div>`:''}</div>
-      <button id="complete" class="complete" type="button">Mark complete & continue</button>`;
+      <button id="complete" class="complete" type="button">Mark complete & continue</button>
+      <div class="question-nav" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+        <button id="previousQuestion" class="reveal" type="button" ${previous ? '' : 'disabled'} style="margin-top:0;${previous ? '' : 'opacity:.45;cursor:not-allowed'}">← Previous</button>
+        <button id="nextQuestion" class="reveal" type="button" ${next ? '' : 'disabled'} style="margin-top:0;${next ? '' : 'opacity:.45;cursor:not-allowed'}">Next →</button>
+      </div>`;
 
     modal.classList.add('show');
     state.last = id;
@@ -141,6 +150,15 @@
     const reveal = body.querySelector('#reveal');
     const explanation = body.querySelector('#explanation');
     const complete = body.querySelector('#complete');
+    const previousButton = body.querySelector('#previousQuestion');
+    const nextButton = body.querySelector('#nextQuestion');
+    const goTo = row => {
+      if (!row) return;
+      openQuestion(row.c,row.t,row.tk,row.q,row.i);
+      if (sheet) sheet.scrollTo({top:0,behavior:'smooth'});
+    };
+    previousButton.onclick = () => goTo(previous);
+    nextButton.onclick = () => goTo(next);
     reveal.onclick = () => {
       const isOpen = explanation.classList.toggle('show');
       reveal.textContent = isOpen ? 'Hide explanation' : 'Reveal explanation';
@@ -168,8 +186,12 @@
     complete.onclick = () => {
       state.done[id] = true;
       save();
-      closeModal();
       render();
+      if (next) {
+        goTo(next);
+      } else {
+        closeModal();
+      }
     };
     typeset();
   }
