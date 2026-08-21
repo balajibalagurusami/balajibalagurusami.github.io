@@ -1,0 +1,38 @@
+Object.assign(window.REVISION_BANK,{
+'1:Statics vs dynamics':[
+{id:'static-dynamic',title:'Static versus dynamic response',level:'foundation',kind:'concept',q:'What mainly distinguishes a dynamic structural problem from a static one?',choices:['Inertia effects and time-varying response are important','All loads are necessarily larger','Material stiffness is ignored','Boundary conditions disappear'],answer:0,explanation:'Dynamic analysis includes inertia and response variation with time.',source:'Lecture 1'},
+{id:'slow-load',title:'When static analysis may suffice',level:'core',kind:'reasoning',q:'A load changes very slowly compared with the structure natural period. Which approximation is often reasonable?',choices:['Quasi-static response','Impulsive response','Resonant response automatically','Zero stiffness'],answer:0,explanation:'Slowly varying loading gives inertia little influence, so a quasi-static approximation may be adequate.',source:'Lecture 1'}
+],
+'1:Inertial force and dynamic equilibrium':[
+{id:'inertia-force',title:'D’Alembert inertia force',level:'foundation',kind:'formula',q:'In D’Alembert form, inertia force for mass m and acceleration ü is written as:',choices:['−m ü','+ku','c u̇','mg only'],answer:0,explanation:'The inertia force is introduced opposite to acceleration so dynamic equilibrium can be written like static equilibrium.',math:'F_I=-m\\ddot{u}',source:'Lectures 1–2'},
+{id:'equilibrium-sdof',title:'Dynamic force balance',level:'core',kind:'formula',q:'For an undamped forced SDOF system, which equation is correct?',choices:['m ü + ku = p(t)','m u + k ü = 0','ku = 0 always','m u̇ + k = p'],answer:0,explanation:'Inertia plus restoring force balances the applied load.',math:'m\\ddot{u}+ku=p(t)',source:'Lectures 1–2'}
+],
+'1:Discretization methods':[
+{id:'why-discretize',title:'Why discretize?',level:'foundation',kind:'concept',q:'Why is a continuous structure often discretized for dynamic analysis?',choices:['To replace infinitely many possible deformation coordinates with a manageable set of DOFs','To eliminate mass','To make stiffness zero','To avoid equations of motion'],answer:0,explanation:'Discretization creates a finite-dimensional mathematical model.',source:'Lecture 1'},
+{id:'lumped-mass',title:'Lumped-mass model',level:'core',kind:'concept',q:'What does a lumped-mass idealization do?',choices:['Concentrates distributed mass at selected discrete coordinates','Spreads every mass continuously','Removes inertia','Converts stiffness to damping'],answer:0,explanation:'Lumped-mass models assign mass to discrete DOFs for simpler equations.',source:'Lectures 1–2'}
+],
+'2:d’Alembert’s principle':[
+{id:'dalembert-meaning',title:'D’Alembert principle',level:'foundation',kind:'concept',q:'What is the purpose of D’Alembert’s principle in dynamics?',choices:['Convert a dynamic problem into an equilibrium form by introducing inertia force','Delete acceleration','Set damping to zero','Replace displacement with stress'],answer:0,explanation:'Adding the inertia force allows the equation to be expressed as force equilibrium.',source:'Lecture 2'},
+{id:'dalembert-equation',title:'D’Alembert balance',level:'core',kind:'formula',q:'For an undamped spring-mass system under p(t), which D’Alembert balance is equivalent to the equation of motion?',choices:['p(t)−ku−m ü=0','p(t)+ku+m ü=0','m u=0','ku=p(t) always'],answer:0,explanation:'External, restoring and inertia forces sum to zero.',math:'p(t)-ku-m\\ddot{u}=0',source:'Lecture 2'}
+],
+'2:Small-angle approximation sin θ ≈ θ':[
+{id:'small-angle',title:'Small-angle linearization',level:'foundation',kind:'concept',q:'For which unit must θ be expressed when using sin θ ≈ θ?',choices:['Radians','Degrees only','Cycles','Hertz'],answer:0,explanation:'The approximation follows the Taylor series of sine when θ is measured in radians.',math:'\\sin\\theta=\\theta-\\frac{\\theta^3}{3!}+\\cdots',source:'Lecture 2'},
+{id:'small-angle-purpose',title:'Why linearize the pendulum?',level:'core',kind:'reasoning',q:'Replacing sin θ by θ in the pendulum equation mainly allows us to:',choices:['Obtain a linear simple-harmonic equation','Remove gravity','Make mass infinite','Ignore displacement'],answer:0,explanation:'The nonlinear pendulum equation becomes linear for sufficiently small angles.',source:'Lecture 2'}
+],
+'3:Axial member stiffness k = AE/L':[
+{id:'axial-k',title:'Axial stiffness formula',level:'foundation',kind:'formula',q:'Which expression gives axial stiffness of a uniform prismatic bar?',choices:['AE/L','EI/L³','GJ/L','AL/E'],answer:0,explanation:'Axial deformation δ=PL/(AE), so k=P/δ=AE/L.',math:'k=\\frac{AE}{L}',source:'Lecture 3'},
+{id:'axial-k-number',title:'Axial stiffness numerical',level:'application',kind:'numerical',q:'For E=200 GPa, A=1000 mm² and L=2 m, approximately what is k?',choices:['100 MN/m','10 MN/m','1 MN/m','1000 MN/m'],answer:0,explanation:'A=0.001 m², so k=(200×10^9)(0.001)/2=100×10^6 N/m.',math:'k=100\\,\\text{MN/m}',source:'Lecture 3'}
+],
+'3:Cantilever tip stiffness k = 3EI/L³':[
+{id:'cantilever-k',title:'Cantilever tip stiffness',level:'core',kind:'formula',q:'For a cantilever with a transverse point load at its free end, what is the equivalent tip stiffness?',choices:['3EI/L³','48EI/L³','12EI/L³','AE/L'],answer:0,explanation:'Tip deflection is PL³/(3EI), giving k=P/δ=3EI/L³.',math:'k=\\frac{3EI}{L^3}',source:'Lecture 3'},
+{id:'length-cube',title:'Length sensitivity',level:'application',kind:'reasoning',q:'If cantilever length doubles while E and I remain unchanged, its tip stiffness becomes:',choices:['One eighth','One half','One quarter','Eight times'],answer:0,explanation:'Cantilever tip stiffness varies as L^{-3}.',math:'k\\propto L^{-3}',source:'Lecture 3'}
+],
+'4:Critical damping coefficient c_cr = 2mωₙ':[
+{id:'ccr-formula',title:'Critical damping coefficient',level:'core',kind:'formula',q:'Which expression gives the critical viscous damping coefficient of an SDOF system?',choices:['c_cr=2mω_n','c_cr=mω_n','c_cr=k/m','c_cr=2kω_n'],answer:0,explanation:'Critical damping separates oscillatory and non-oscillatory decay.',math:'c_{cr}=2m\\omega_n=2\\sqrt{km}',source:'Lecture 4'},
+{id:'ccr-number',title:'Critical damping numerical',level:'application',kind:'numerical',q:'For m=5 kg and ω_n=4 rad/s, what is c_cr?',choices:['40 N·s/m','20 N·s/m','80 N·s/m','1.25 N·s/m'],answer:0,explanation:'c_cr=2×5×4=40 N·s/m.',math:'c_{cr}=40\\,\\text{N·s/m}',source:'Lecture 4'}
+],
+'4:Energy in undamped free vibration':[
+{id:'energy-total',title:'Total mechanical energy',level:'core',kind:'formula',q:'For ideal undamped free vibration, what happens to total kinetic plus strain energy?',choices:['It remains constant','It decays exponentially','It becomes zero each cycle','It increases without limit'],answer:0,explanation:'With no damping or forcing, energy transfers between kinetic and elastic forms but total energy is conserved.',math:'E=\\frac12m\\dot{u}^2+\\frac12ku^2=\\text{constant}',source:'Lecture 4'},
+{id:'energy-turning',title:'Energy at maximum displacement',level:'application',kind:'reasoning',q:'At a turning point where displacement magnitude is maximum in undamped free vibration, the velocity is:',choices:['Zero','Maximum','Infinite','Equal to displacement'],answer:0,explanation:'At maximum displacement all mechanical energy is instantaneously strain energy and kinetic energy is zero.',source:'Lecture 4'}
+]
+});
