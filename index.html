@@ -75,10 +75,6 @@
       padding: 6px 10px;
       font-size: 12px;
       font-weight: 800;
-      background: var(--accent-soft);
-      color: var(--accent);
-    }
-    .tag.current {
       background: var(--current-soft);
       color: var(--current);
     }
@@ -153,13 +149,13 @@
     <header class="hero">
       <p class="eyebrow">BITS Pilani WILP</p>
       <h1>Quiz Home</h1>
-      <p>One place for course revision. Choose a semester, then open a subject quiz. Progress inside each quiz remains stored in your browser where supported.</p>
+      <p>Semester-wise course revision. Open any subject below to continue your quiz and learning journey. Progress inside each course remains stored in your browser where supported.</p>
     </header>
 
-    <section class="semester" aria-labelledby="current-semester">
+    <section class="semester" aria-labelledby="semester-one">
       <div class="semester-head">
-        <h2 id="current-semester">Current semester</h2>
-        <span class="tag current">3 quizzes</span>
+        <h2 id="semester-one">Semester 1</h2>
+        <span class="tag">4 quizzes</span>
       </div>
       <div class="grid">
         <a class="quiz" href="./advanced-structural-mechanics-stability/">
@@ -182,18 +178,10 @@
           <p>FEA concepts, elements, nodes, matrices and structural analysis.</p>
           <span class="open">Open quiz →</span>
         </a>
-      </div>
-    </section>
 
-    <section class="semester" aria-labelledby="previous-semester">
-      <div class="semester-head">
-        <h2 id="previous-semester">Previous semester</h2>
-        <span class="tag">1 quiz</span>
-      </div>
-      <div class="grid">
         <a class="quiz" href="./steel-structures/">
           <div class="icon">🏢</div>
-          <h3>Steel Structures</h3>
+          <h3>Advanced Steel Structures</h3>
           <p>Steel Quest textbook revision and topic-by-topic knowledge checks.</p>
           <span class="open">Open quiz →</span>
         </a>
