@@ -56,3 +56,4 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -m "Cover Steel Quest Chapter 4"
           git push origin main
+# trigger
