@@ -1,27 +1,19 @@
 {
-  "updated": "2026-08-21",
+  "updated": "2026-08-22",
   "source": "N. Subramanian, Design of Steel Structures: Limit State Method",
-  "strict_rule": "A chapter is covered only when every contents-list topic has a source-grounded lesson and knowledge check.",
+  "strict_rule": "A chapter is covered only when every tracked textbook topic has a source-grounded lesson and knowledge check.",
   "topic_inventory": {
-    "tracked": 306,
-    "total": 306
+    "tracked": 308,
+    "total": 308
   },
   "appendices_tracked": 6,
-  "detailed_lessons": 257,
+  "detailed_lessons": 266,
   "source_limitations": [
-    "The textbook is a scanned image PDF, so Chapter 2 completion was verified from rendered source pages rather than extracted machine text. No Chapter 2 contents-list topic remains ungrounded.",
-    "Chapter 3 is also image-based. All 20 contents-list topics were checked against rendered textbook pages 131-264 before being marked covered. The wind-code lesson follows the IS 875 (Part 3) formulation printed in this textbook edition; it is a textbook-revision lesson, not a claim that the cited edition is the latest code revision.",
-    "Chapter 4 is image-based. All 12 contents-list topics were verified against rendered textbook pages 267-321 before being marked covered. The lessons summarize the textbook analysis methods and are revision material, not a substitute for software-specific implementation guidance.",
-    "Chapter 5 is image-based. All 17 contents-list topics were verified against rendered textbook pages 324-433 before being marked covered. The lessons follow the bolt, pin and connection provisions and terminology presented in this textbook edition; where the chapter refers to IS 800 or BS 5950 provisions, the revision content reflects the book's presentation rather than asserting that those cited provisions are the latest code requirements.",
-    "Chapter 6 is image-based. All 23 contents-list topics were checked against rendered textbook pages 437-551 before being marked covered. The revision lessons follow the welding processes, electrode classification, weld specifications, connection-design methods and code references as presented in this textbook edition; cited IS 800/IS 816 provisions are treated as textbook content rather than a claim that every referenced provision is the latest code wording.",
-    "Chapter 7 is image-based. All 20 contents-list topics were checked against rendered textbook pages 554-606 before being marked covered. The lessons follow the tension-member formulas, effective-net-area concepts, shear-lag treatment, lug-angle provisions and other code references as presented in this textbook edition; these are textbook-revision lessons rather than a claim that every cited code provision is the latest wording.",
-    "Chapter 8 is image-based. All 19 contents-list topics were verified against rendered textbook pages 608-681, with the separately uploaded Chapter 8 worked-solution document used only to cross-check exercise/application content. The lessons follow the plastic-analysis, stability, section-classification and effective-width treatment as presented in this textbook edition; cited IS 800/BS 5950 provisions are textbook-revision content rather than a claim that every cited provision is the latest wording.",
-    "Chapter 9 is image-based. All 24 contents-list topics were verified against rendered textbook pages 683-804 before being marked covered. The revision lessons follow the textbook treatment of Euler and inelastic buckling, multiple column curves, effective length, single-angle and built-up struts, bases, special materials and displacement. Any IS 800, AISC, BS 5950 or other code references are treated as the provisions presented in this textbook edition, not as confirmation of the latest code wording.",
-    "Chapter 10 is image-based. All 26 contents-list topics were checked against the rendered chapter and topic-opening pages spanning textbook pages 807-928 before being marked covered. The lessons follow the textbook treatment of section classification, lateral-torsional buckling, bending and shear strength, deflection, local web checks, special beam forms and multiaxial bending. Any IS 800, BS 5950 or other code references are treated as textbook-edition revision content, not as confirmation of the latest code wording.",
-    "Chapter 11 is image-based. All 20 contents-list topics were checked against rendered textbook pages 929-1015 before being marked covered. The lessons follow the textbook treatment of web shear buckling, tension-field action, combined bending and shear, stiffeners, IS 800:2007 plate-girder provisions, hybrid/corrugated/box girders and steel plate shear walls. Code references are presented as textbook-edition revision content rather than confirmation of the latest code wording.",
-    "Chapter 12 is image-based. All 10 contents-list topics were verified against rendered textbook pages 1016-1052 before being marked covered. The lessons follow the textbook treatment of crane runway components, wheel/impact/surge/drag loading, moving-load effects, fatigue, section selection, design checks and serviceability. Impact allowances and code references are presented as textbook-edition revision content rather than confirmation of the latest code wording.",
-    "Chapter 13 is image-based. All 17 contents-list topics were verified against rendered textbook pages 1054-1126 before being marked covered. The lessons follow the textbook treatment of beam-column behaviour, P-δ and P-Δ effects, lateral-torsional buckling interaction, biaxial loading, local-capacity and overall-buckling interaction checks, IS 800:2007 code procedures, crane columns and eccentrically loaded base plates. Code references are presented as textbook-edition revision content rather than confirmation of the latest code wording.",
-    "Chapter 14 is image-based. All 13 contents-list topics were verified against rendered textbook pages 1129-1197 before being marked covered. The lessons follow the textbook treatment of industrial-building planning, roofing and wall systems, bay width, braced and unbraced framing, purlins/girts/eave struts, plane trusses, floor plates, end bearings, slabs on grade and worked industrial-building designs. The chapter contains historical material choices such as asbestos-cement roofing and code references from the textbook edition; these are presented as source-revision content and not as current material-safety or latest-code recommendations."
+    "Chapters 1-14 were grounded in the uploaded main textbook scan; because the scan is image-based, completion was verified against rendered source pages rather than relying solely on extracted text. Code provisions are treated as textbook-edition revision content, not as confirmation of the latest code wording.",
+    "Chapter 8 also had a separately uploaded worked-solution document used only to cross-check exercise/application content.",
+    "Chapter 14 contains historical material choices such as asbestos-cement roofing; these are presented as source-revision content and not as current material-safety recommendations.",
+    "App Chapter 15 maps to the newly uploaded supplementary Chapter 19 PDF, Corrosion Protection of Steel Structures. The supplementary source revealed two numbered top-level topics, 19.5 Detailing to Reduce Corrosion and 19.6 Encasing in Concrete, that were absent from the earlier inventory. They were added before completion, increasing the strict textbook inventory from 306 to 308 topics. The chapter follows corrosion exposure classifications and code references as presented in the source edition rather than asserting that cited provisions are current.",
+    "App Chapters 16-18 will map respectively to the uploaded supplementary Chapter 20 Fire-resistant Design, Chapter 21 Fatigue-resistant Design, and Chapter 22 Design for Torsion PDFs."
   ],
   "chapters": [
     {"chapter": 1, "title": "Materials, Structures, and Specifications", "status": "covered", "covered_topics": 24, "total_topics": 24},
@@ -38,7 +30,7 @@
     {"chapter": 12, "title": "Gantry Girders", "status": "covered", "covered_topics": 10, "total_topics": 10},
     {"chapter": 13, "title": "Design of Beam-columns", "status": "covered", "covered_topics": 17, "total_topics": 17},
     {"chapter": 14, "title": "Design of Industrial Buildings", "status": "covered", "covered_topics": 13, "total_topics": 13},
-    {"chapter": 15, "title": "Corrosion Protection of Steel Structures", "status": "tracked", "covered_topics": 0, "total_topics": 7},
+    {"chapter": 15, "title": "Corrosion Protection of Steel Structures", "status": "covered", "covered_topics": 9, "total_topics": 9},
     {"chapter": 16, "title": "Fire-resistant Design", "status": "tracked", "covered_topics": 0, "total_topics": 16},
     {"chapter": 17, "title": "Fatigue-resistant Design", "status": "tracked", "covered_topics": 0, "total_topics": 13},
     {"chapter": 18, "title": "Design for Torsion", "status": "tracked", "covered_topics": 0, "total_topics": 13}
