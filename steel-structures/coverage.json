@@ -7,14 +7,15 @@
     "total": 308
   },
   "appendices_tracked": 6,
-  "detailed_lessons": 282,
+  "detailed_lessons": 295,
   "source_limitations": [
     "Chapters 1-14 were grounded in the uploaded main textbook scan; because the scan is image-based, completion was verified against rendered source pages rather than relying solely on extracted text. Code provisions are treated as textbook-edition revision content, not as confirmation of the latest code wording.",
     "Chapter 8 also had a separately uploaded worked-solution document used only to cross-check exercise/application content.",
     "Chapter 14 contains historical material choices such as asbestos-cement roofing; these are presented as source-revision content and not as current material-safety recommendations.",
     "App Chapter 15 maps to the uploaded supplementary Chapter 19 PDF, Corrosion Protection of Steel Structures. That source revealed two numbered top-level topics, Detailing to Reduce Corrosion and Encasing in Concrete, that were absent from the earlier inventory. They were added before completion, increasing the strict textbook inventory from 306 to 308 topics. Exposure classifications and code references are treated as textbook-edition revision content rather than confirmation of current code requirements.",
     "App Chapter 16 maps to the uploaded supplementary Chapter 20 PDF, Fire-resistant Design. All 16 tracked contents-list topics were grounded in that source. The source uses ISO 834 and historical editions of IS, BS and Eurocode fire provisions; Steel Quest presents them as textbook-revision content, not as confirmation of current code wording. Simplified thermal calculations in the chapter assume conditions such as uniform steel temperature and may be conservative; the source itself notes limitations where significant thermal gradients or complex frame behaviour occur.",
-    "App Chapters 17-18 map respectively to the uploaded supplementary Chapter 21 Fatigue-resistant Design and Chapter 22 Design for Torsion PDFs."
+    "App Chapter 17 maps to the uploaded supplementary Chapter 21 PDF, Fatigue-resistant Design. All 13 tracked contents-list topics were grounded in that source. The chapter follows the stress-method and IS 800 fatigue treatment presented in the textbook, including S-N detail classes, service-load fatigue checks, Palmgren-Miner cumulative damage, cycle counting and combined-stress guidance; these are textbook-edition revision concepts, not confirmation of the latest code wording. The source explicitly treats strain-based and fracture-mechanics approaches as largely outside its detailed design scope.",
+    "App Chapter 18 maps to the uploaded supplementary Chapter 22 PDF, Design for Torsion."
   ],
   "chapters": [
     {"chapter": 1, "title": "Materials, Structures, and Specifications", "status": "covered", "covered_topics": 24, "total_topics": 24},
@@ -33,7 +34,7 @@
     {"chapter": 14, "title": "Design of Industrial Buildings", "status": "covered", "covered_topics": 13, "total_topics": 13},
     {"chapter": 15, "title": "Corrosion Protection of Steel Structures", "status": "covered", "covered_topics": 9, "total_topics": 9},
     {"chapter": 16, "title": "Fire-resistant Design", "status": "covered", "covered_topics": 16, "total_topics": 16},
-    {"chapter": 17, "title": "Fatigue-resistant Design", "status": "tracked", "covered_topics": 0, "total_topics": 13},
+    {"chapter": 17, "title": "Fatigue-resistant Design", "status": "covered", "covered_topics": 13, "total_topics": 13},
     {"chapter": 18, "title": "Design for Torsion", "status": "tracked", "covered_topics": 0, "total_topics": 13}
   ]
 }
