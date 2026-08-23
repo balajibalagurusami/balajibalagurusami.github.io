@@ -1,11 +1,11 @@
 {
   "updated": "2026-08-24",
   "rule": "A chapter is deep-covered only when every tracked textbook topic has at least 7 distinct live question steps after de-duplication.",
-  "deep_covered_chapters": 2,
+  "deep_covered_chapters": 3,
   "chapters": [
     {"chapter": 1, "title": "Materials, Structures, and Specifications", "tracked_topics": 24, "question_steps": 175, "status": "deep-covered"},
     {"chapter": 2, "title": "The Basis of Structural Design", "tracked_topics": 12, "question_steps": 87, "status": "deep-covered"},
-    {"chapter": 3, "title": "Loading and Load Combinations", "status": "pending"},
+    {"chapter": 3, "title": "Loading and Load Combinations", "tracked_topics": 20, "question_steps": 144, "status": "deep-covered"},
     {"chapter": 4, "title": "Methods of Structural Analysis", "status": "pending"},
     {"chapter": 5, "title": "Bolted Connections", "status": "pending"},
     {"chapter": 6, "title": "Welded Connections", "status": "pending"},
@@ -22,5 +22,5 @@
     {"chapter": 17, "title": "Fatigue-resistant Design", "status": "pending"},
     {"chapter": 18, "title": "Design for Torsion", "status": "pending"}
   ],
-  "overall_live_question_count": 600
+  "overall_live_question_count": 720
 }
