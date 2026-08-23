@@ -1,13 +1,13 @@
 {
   "updated": "2026-08-24",
   "rule": "A chapter is deep-covered only when every tracked textbook topic has at least 7 distinct live question steps after de-duplication.",
-  "deep_covered_chapters": 4,
+  "deep_covered_chapters": 5,
   "chapters": [
     {"chapter": 1, "title": "Materials, Structures, and Specifications", "tracked_topics": 24, "question_steps": 175, "status": "deep-covered"},
     {"chapter": 2, "title": "The Basis of Structural Design", "tracked_topics": 12, "question_steps": 87, "status": "deep-covered"},
     {"chapter": 3, "title": "Loading and Load Combinations", "tracked_topics": 20, "question_steps": 144, "status": "deep-covered"},
     {"chapter": 4, "title": "Methods of Structural Analysis", "tracked_topics": 12, "question_steps": 84, "status": "deep-covered"},
-    {"chapter": 5, "title": "Bolted Connections", "status": "pending"},
+    {"chapter": 5, "title": "Bolted Connections", "tracked_topics": 17, "question_steps": 122, "status": "deep-covered"},
     {"chapter": 6, "title": "Welded Connections", "status": "pending"},
     {"chapter": 7, "title": "Design of Tension Members", "status": "pending"},
     {"chapter": 8, "title": "Plastic and Local Buckling Behaviour of Structural Steel", "status": "pending"},
@@ -22,5 +22,5 @@
     {"chapter": 17, "title": "Fatigue-resistant Design", "status": "pending"},
     {"chapter": 18, "title": "Design for Torsion", "status": "pending"}
   ],
-  "overall_live_question_count": 788
+  "overall_live_question_count": 890
 }
