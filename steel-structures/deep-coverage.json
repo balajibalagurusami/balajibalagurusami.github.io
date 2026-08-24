@@ -1,7 +1,7 @@
 {
   "updated": "2026-08-24",
   "rule": "A chapter is deep-covered only when every tracked textbook topic has at least 7 distinct live question steps after de-duplication.",
-  "deep_covered_chapters": 14,
+  "deep_covered_chapters": 15,
   "chapters": [
     {"chapter": 1, "title": "Materials, Structures, and Specifications", "tracked_topics": 24, "question_steps": 175, "status": "deep-covered"},
     {"chapter": 2, "title": "The Basis of Structural Design", "tracked_topics": 12, "question_steps": 87, "status": "deep-covered"},
@@ -17,10 +17,10 @@
     {"chapter": 12, "title": "Gantry Girders", "tracked_topics": 10, "question_steps": 70, "status": "deep-covered"},
     {"chapter": 13, "title": "Design of Beam-columns", "tracked_topics": 17, "question_steps": 119, "status": "deep-covered"},
     {"chapter": 14, "title": "Design of Industrial Buildings", "tracked_topics": 13, "question_steps": 91, "status": "deep-covered"},
-    {"chapter": 15, "title": "Corrosion Protection of Steel Structures", "status": "pending"},
+    {"chapter": 15, "title": "Corrosion Protection of Steel Structures", "tracked_topics": 9, "question_steps": 78, "status": "deep-covered"},
     {"chapter": 16, "title": "Fire-resistant Design", "status": "pending"},
     {"chapter": 17, "title": "Fatigue-resistant Design", "status": "pending"},
     {"chapter": 18, "title": "Design for Torsion", "status": "pending"}
   ],
-  "overall_live_question_count": 1922
+  "overall_live_question_count": 1985
 }
