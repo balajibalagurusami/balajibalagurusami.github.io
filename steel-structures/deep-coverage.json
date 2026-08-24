@@ -1,7 +1,7 @@
 {
   "updated": "2026-08-24",
   "rule": "A chapter is deep-covered only when every tracked textbook topic has at least 7 distinct live question steps after de-duplication.",
-  "deep_covered_chapters": 7,
+  "deep_covered_chapters": 8,
   "chapters": [
     {"chapter": 1, "title": "Materials, Structures, and Specifications", "tracked_topics": 24, "question_steps": 175, "status": "deep-covered"},
     {"chapter": 2, "title": "The Basis of Structural Design", "tracked_topics": 12, "question_steps": 87, "status": "deep-covered"},
@@ -10,7 +10,7 @@
     {"chapter": 5, "title": "Bolted Connections", "tracked_topics": 17, "question_steps": 122, "status": "deep-covered"},
     {"chapter": 6, "title": "Welded Connections", "tracked_topics": 23, "question_steps": 161, "status": "deep-covered"},
     {"chapter": 7, "title": "Design of Tension Members", "tracked_topics": 20, "question_steps": 145, "status": "deep-covered"},
-    {"chapter": 8, "title": "Plastic and Local Buckling Behaviour of Structural Steel", "status": "pending"},
+    {"chapter": 8, "title": "Plastic and Local Buckling Behaviour of Structural Steel", "tracked_topics": 19, "question_steps": 138, "status": "deep-covered"},
     {"chapter": 9, "title": "Design of Compression Members", "status": "pending"},
     {"chapter": 10, "title": "Design of Beams", "status": "pending"},
     {"chapter": 11, "title": "Design of Plate Girders", "status": "pending"},
@@ -22,5 +22,5 @@
     {"chapter": 17, "title": "Fatigue-resistant Design", "status": "pending"},
     {"chapter": 18, "title": "Design for Torsion", "status": "pending"}
   ],
-  "overall_live_question_count": 1148
+  "overall_live_question_count": 1262
 }
