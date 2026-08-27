@@ -4,6 +4,8 @@
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtx) return;
 
+  const DAILY_STORE_KEY = 'bits-sem1-daily-v1';
+  const MILESTONE_SIZE = 10;
   let audio = null;
 
   const patterns = {
@@ -78,16 +80,53 @@
     } catch (_) {}
   }
 
+  function dayKey(date = new Date()) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+
+  function dailyCount() {
+    try {
+      const state = JSON.parse(localStorage.getItem(DAILY_STORE_KEY) || '{}');
+      return Number(state.days?.[dayKey()]?.count) || 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  let lastDailyCount = dailyCount();
+
   window.BITS_QUIZ_SOUNDS = { play, prime };
 
   document.addEventListener('click', event => {
-    const choice = event.target.closest?.('.choice');
-    if (!choice) return;
+    const target = event.target.closest?.('.choice, #complete');
+    if (!target) return;
 
-    if (choice.classList.contains('good')) {
-      play('correct');
-    } else if (choice.classList.contains('bad')) {
-      play('wrong');
+    prime();
+
+    if (target.classList.contains('choice')) {
+      if (target.classList.contains('good')) {
+        play('correct');
+      } else if (target.classList.contains('bad')) {
+        play('wrong');
+      }
     }
+
+    const count = dailyCount();
+    if (count > lastDailyCount) {
+      lastDailyCount = count;
+      if (count % MILESTONE_SIZE === 0) {
+        const achievement = count === MILESTONE_SIZE ? 'streak' : 'milestone';
+        setTimeout(() => play(achievement), 240);
+      }
+    } else {
+      lastDailyCount = Math.max(lastDailyCount, count);
+    }
+  });
+
+  window.addEventListener('storage', event => {
+    if (event.key === DAILY_STORE_KEY) lastDailyCount = dailyCount();
   });
 })();
