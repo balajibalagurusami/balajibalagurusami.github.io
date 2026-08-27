@@ -10,7 +10,7 @@ Welcome to my GitHub! I'm a **BIM Automation Expert** with a passion for leverag
 - **[dotbim-ifc](https://github.com/balajibalagurusami/dotbim-ifc) (Fork):** IFC conversion utilities for dotBIM files.
 - **[chat](https://github.com/balajibalagurusami/chat):** HTML-based chat application.
 - **[pdf-poc](https://github.com/balajibalagurusami/pdf-poc) (Fork):** Proof of concept for PDF manipulation using JavaScript.
-- **[WILP Quiz](https://wilp.aecbim.work): **Quiz application for BITS Pilani M.Tech Structural Engineering Students vibecoded with ChatGPT that supports Leaderboard, saving progress via Google Login.
+- **[WILP Quiz](https://wilp.aecbim.work):** Quiz application for BITS Pilani M.Tech Structural Engineering Students vibecoded with ChatGPT that supports Leaderboard, saving progress via Google Login.
 
 ---
 
