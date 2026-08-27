@@ -750,5 +750,18 @@
     collect
   };
 
+  if (
+    ACTIVE &&
+    (
+      location.pathname === "/" ||
+      location.pathname.endsWith("/index.html")
+    )
+  ) {
+    const leaderboardScript = document.createElement("script");
+    leaderboardScript.src = "/assets/leaderboard.js?v=20260827-daily";
+    leaderboardScript.defer = true;
+    document.body.appendChild(leaderboardScript);
+  }
+
   init();
 })();
