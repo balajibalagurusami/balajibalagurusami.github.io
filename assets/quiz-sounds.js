@@ -6,16 +6,20 @@
 
   const DAILY_STORE_KEY = 'bits-sem1-daily-v1';
   const MILESTONE_SIZE = 10;
-  const CORRECT_AUDIO_URL = '/assets/correct-answer.mp3';
+  const CLIPS = {
+    correct: '/assets/k7m2v9.mp3',
+    wrong: '/assets/r4x8q1.mp3'
+  };
+
   let audio = null;
-  let correctAudio = null;
+  const clipCache = {};
 
   const patterns = {
     correctFallback: [
       [0.00, 523.25, 0.09, 'sine', 0.045],
       [0.08, 659.25, 0.13, 'sine', 0.050]
     ],
-    wrong: [
+    wrongFallback: [
       [0.00, 196.00, 0.11, 'triangle', 0.040],
       [0.10, 146.83, 0.16, 'triangle', 0.035]
     ],
@@ -37,23 +41,31 @@
     return audio;
   }
 
-  function primeCorrectAudio() {
-    if (!correctAudio) {
-      correctAudio = new Audio(CORRECT_AUDIO_URL);
-      correctAudio.preload = 'auto';
-      correctAudio.volume = 0.9;
+  function getClip(name) {
+    const url = CLIPS[name];
+    if (!url) return null;
+    if (!clipCache[name]) {
+      const clip = new Audio(url);
+      clip.preload = 'auto';
+      clip.volume = 0.9;
+      clipCache[name] = clip;
     }
-    try {
-      correctAudio.load();
-    } catch (_) {}
-    return correctAudio;
+    return clipCache[name];
+  }
+
+  function primeClip(name) {
+    const clip = getClip(name);
+    if (!clip) return null;
+    try { clip.load(); } catch (_) {}
+    return clip;
   }
 
   function prime() {
     try {
       const ctx = context();
       if (ctx.state === 'suspended') ctx.resume().catch(() => {});
-      primeCorrectAudio();
+      primeClip('correct');
+      primeClip('wrong');
       return ctx;
     } catch (_) {
       return null;
@@ -95,23 +107,31 @@
     } catch (_) {}
   }
 
-  function playCorrect() {
+  function playClip(name, fallbackName) {
     try {
-      const clip = primeCorrectAudio();
+      const clip = primeClip(name);
+      if (!clip) {
+        playPattern(fallbackName);
+        return;
+      }
       clip.pause();
       clip.currentTime = 0;
       const started = clip.play();
       if (started && typeof started.catch === 'function') {
-        started.catch(() => playPattern('correctFallback'));
+        started.catch(() => playPattern(fallbackName));
       }
     } catch (_) {
-      playPattern('correctFallback');
+      playPattern(fallbackName);
     }
   }
 
   function play(name) {
     if (name === 'correct') {
-      playCorrect();
+      playClip('correct', 'correctFallback');
+      return;
+    }
+    if (name === 'wrong') {
+      playClip('wrong', 'wrongFallback');
       return;
     }
     playPattern(name);
@@ -167,5 +187,6 @@
     if (event.key === DAILY_STORE_KEY) lastDailyCount = dailyCount();
   });
 
-  primeCorrectAudio();
+  primeClip('correct');
+  primeClip('wrong');
 })();
