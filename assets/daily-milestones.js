@@ -217,7 +217,7 @@
     const crossedMilestone = Math.floor(day.count / MILESTONE_SIZE) > Math.floor(beforeCount / MILESTONE_SIZE);
     if (!beforeQualified && day.qualified) {
       const streak = currentStreak(today);
-      toast(`🔥 ${streak} ${streak === 1 ? 'day' : 'day'} streak secured — ${day.count} questions today`);
+      toast(`🔥 ${streak}-day streak secured — ${day.count} questions today`);
     } else if (crossedMilestone) {
       toast(`🏁 Milestone ${day.milestones} reached — ${day.count} questions today`);
     }
