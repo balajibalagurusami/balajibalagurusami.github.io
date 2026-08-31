@@ -7,8 +7,8 @@
   const DAILY_STORE_KEY = 'bits-sem1-daily-v1';
   const MILESTONE_SIZE = 10;
   const CLIPS = {
-    correct: '/assets/correct.mp3',
-    wrong: '/assets/wrong.mp3'
+    correct: '/assets/k7m2v9.mp3',
+    wrong: '/assets/r4x8q1.mp3'
   };
 
   let audio = null;
