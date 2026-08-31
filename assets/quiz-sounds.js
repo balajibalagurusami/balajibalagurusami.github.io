@@ -15,10 +15,6 @@
   let audio = null;
   const clipCache = {};
 
-  const patterns = {
-    milestone: [[0,659.25,.08,'sine',.045],[.08,783.99,.08,'sine',.048],[.16,987.77,.16,'sine',.052]]
-  };
-
   function context(){ if(!audio) audio=new AudioCtx(); return audio; }
 
   function getClip(name){
@@ -42,30 +38,6 @@
     }catch(_){ return null; }
   }
 
-  function schedule(ctx,pattern){
-    const now=ctx.currentTime+.005;
-    pattern.forEach(([delay,frequency,duration,type,volume])=>{
-      const oscillator=ctx.createOscillator(), gain=ctx.createGain();
-      const start=now+delay, stop=start+duration;
-      oscillator.type=type;
-      oscillator.frequency.setValueAtTime(frequency,start);
-      gain.gain.setValueAtTime(.0001,start);
-      gain.gain.exponentialRampToValueAtTime(volume,start+Math.min(.012,duration/3));
-      gain.gain.exponentialRampToValueAtTime(.0001,stop);
-      oscillator.connect(gain); gain.connect(ctx.destination);
-      oscillator.start(start); oscillator.stop(stop+.01);
-    });
-  }
-
-  function playPattern(name){
-    const pattern=patterns[name];
-    if(!pattern) return;
-    try{
-      const ctx=context(), start=()=>schedule(ctx,pattern);
-      if(ctx.state==='suspended') ctx.resume().then(start).catch(()=>{}); else start();
-    }catch(_){}
-  }
-
   function playClip(name){
     try{
       const clip=getClip(name);
@@ -78,11 +50,7 @@
   }
 
   function play(name){
-    if(name==='correct' || name==='wrong' || name==='streak'){
-      playClip(name);
-      return;
-    }
-    playPattern(name);
+    if(name==='correct' || name==='wrong' || name==='streak') playClip(name);
   }
 
   function dayKey(date=new Date()){
@@ -102,18 +70,23 @@
     const target=event.target.closest?.('.choice, #complete');
     if(!target) return;
     prime();
+
+    const count=dailyCount();
+    const isNewAttempt=count>lastDailyCount;
+    const isTenQuestionAchievement=isNewAttempt && count%MILESTONE_SIZE===0;
+
+    if(isNewAttempt) lastDailyCount=count;
+    else lastDailyCount=Math.max(lastDailyCount,count);
+
+    if(isTenQuestionAchievement){
+      play('streak');
+      return;
+    }
+
     if(target.classList.contains('choice')){
       if(target.classList.contains('good')) play('correct');
       else if(target.classList.contains('bad')) play('wrong');
     }
-    const count=dailyCount();
-    if(count>lastDailyCount){
-      lastDailyCount=count;
-      if(count%MILESTONE_SIZE===0){
-        const achievement=count===MILESTONE_SIZE?'streak':'milestone';
-        setTimeout(()=>play(achievement),240);
-      }
-    }else lastDailyCount=Math.max(lastDailyCount,count);
   });
 
   window.addEventListener('storage',event=>{ if(event.key===DAILY_STORE_KEY) lastDailyCount=dailyCount(); });
