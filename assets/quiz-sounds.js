@@ -6,10 +6,12 @@
 
   const DAILY_STORE_KEY = 'bits-sem1-daily-v1';
   const MILESTONE_SIZE = 10;
+  const CORRECT_AUDIO_URL = '/assets/correct-answer.mp3';
   let audio = null;
+  let correctAudio = null;
 
   const patterns = {
-    correct: [
+    correctFallback: [
       [0.00, 523.25, 0.09, 'sine', 0.045],
       [0.08, 659.25, 0.13, 'sine', 0.050]
     ],
@@ -35,10 +37,23 @@
     return audio;
   }
 
+  function primeCorrectAudio() {
+    if (!correctAudio) {
+      correctAudio = new Audio(CORRECT_AUDIO_URL);
+      correctAudio.preload = 'auto';
+      correctAudio.volume = 0.9;
+    }
+    try {
+      correctAudio.load();
+    } catch (_) {}
+    return correctAudio;
+  }
+
   function prime() {
     try {
       const ctx = context();
       if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      primeCorrectAudio();
       return ctx;
     } catch (_) {
       return null;
@@ -66,7 +81,7 @@
     });
   }
 
-  function play(name) {
+  function playPattern(name) {
     const pattern = patterns[name];
     if (!pattern) return;
     try {
@@ -78,6 +93,28 @@
         start();
       }
     } catch (_) {}
+  }
+
+  function playCorrect() {
+    try {
+      const clip = primeCorrectAudio();
+      clip.pause();
+      clip.currentTime = 0;
+      const started = clip.play();
+      if (started && typeof started.catch === 'function') {
+        started.catch(() => playPattern('correctFallback'));
+      }
+    } catch (_) {
+      playPattern('correctFallback');
+    }
+  }
+
+  function play(name) {
+    if (name === 'correct') {
+      playCorrect();
+      return;
+    }
+    playPattern(name);
   }
 
   function dayKey(date = new Date()) {
@@ -129,4 +166,6 @@
   window.addEventListener('storage', event => {
     if (event.key === DAILY_STORE_KEY) lastDailyCount = dailyCount();
   });
+
+  primeCorrectAudio();
 })();
