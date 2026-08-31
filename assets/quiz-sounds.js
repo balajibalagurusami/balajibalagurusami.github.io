@@ -7,13 +7,12 @@
   const DAILY_STORE_KEY = 'bits-sem1-daily-v1';
   const MILESTONE_SIZE = 10;
   const CLIPS = {
-    correct: { binary: '/assets/k7m2v9.mp3', text: '/assets/k7m2v9.aud' },
-    wrong: { binary: '/assets/r4x8q1.mp3', text: '/assets/r4x8q1.aud' }
+    correct: '/assets/correct.mp3',
+    wrong: '/assets/wrong.mp3'
   };
 
   let audio = null;
   const clipCache = {};
-  const sourceCache = {};
 
   const patterns = {
     correctFallback: [[0,523.25,.09,'sine',.045],[.08,659.25,.13,'sine',.05]],
@@ -23,41 +22,24 @@
   };
 
   function context(){ if(!audio) audio=new AudioCtx(); return audio; }
-  function normalizeBase64(text){ const value=String(text||'').replace(/\s+/g,''); return /^[A-Za-z0-9+/]+={0,2}$/.test(value)?value:''; }
 
-  async function resolveSource(name){
-    if(sourceCache[name]) return sourceCache[name];
-    const spec=CLIPS[name];
-    if(!spec) return '';
-    sourceCache[name]=(async()=>{
-      try{ const head=await fetch(spec.binary,{method:'HEAD',cache:'force-cache'}); if(head.ok) return spec.binary; }catch(_){}
-      try{
-        const response=await fetch(spec.text,{cache:'force-cache'});
-        if(!response.ok) return '';
-        const encoded=normalizeBase64(await response.text());
-        return encoded?`data:audio/mpeg;base64,${encoded}`:'';
-      }catch(_){ return ''; }
-    })();
-    return sourceCache[name];
-  }
-
-  async function getClip(name){
-    if(clipCache[name]) return clipCache[name];
-    const src=await resolveSource(name);
+  function getClip(name){
+    const src=CLIPS[name];
     if(!src) return null;
-    const clip=new Audio(src);
-    clip.preload='auto';
-    clip.volume=.9;
-    clipCache[name]=clip;
-    return clip;
+    if(!clipCache[name]){
+      const clip=new Audio(src);
+      clip.preload='auto';
+      clip.volume=.9;
+      clipCache[name]=clip;
+    }
+    return clipCache[name];
   }
 
   function prime(){
     try{
       const ctx=context();
       if(ctx.state==='suspended') ctx.resume().catch(()=>{});
-      getClip('correct').catch(()=>{});
-      getClip('wrong').catch(()=>{});
+      ['correct','wrong'].forEach(name=>{ try{ getClip(name)?.load(); }catch(_){} });
       return ctx;
     }catch(_){ return null; }
   }
@@ -86,17 +68,20 @@
     }catch(_){}
   }
 
-  async function playClip(name,fallbackName){
+  function playClip(name,fallbackName){
     try{
-      const clip=await getClip(name);
+      const clip=getClip(name);
       if(!clip){ playPattern(fallbackName); return; }
-      clip.pause(); clip.currentTime=0; await clip.play();
+      clip.pause();
+      clip.currentTime=0;
+      const started=clip.play();
+      if(started && typeof started.catch==='function') started.catch(()=>playPattern(fallbackName));
     }catch(_){ playPattern(fallbackName); }
   }
 
   function play(name){
-    if(name==='correct'){ void playClip('correct','correctFallback'); return; }
-    if(name==='wrong'){ void playClip('wrong','wrongFallback'); return; }
+    if(name==='correct'){ playClip('correct','correctFallback'); return; }
+    if(name==='wrong'){ playClip('wrong','wrongFallback'); return; }
     playPattern(name);
   }
 
