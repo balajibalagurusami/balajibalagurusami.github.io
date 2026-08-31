@@ -7,8 +7,8 @@
   const DAILY_STORE_KEY = 'bits-sem1-daily-v1';
   const MILESTONE_SIZE = 10;
   const CLIPS = {
-    correct: '/assets/correct.mp3',
-    wrong: '/assets/wrong.mp3',
+    correct: '/assets/k7m2v9.mp3',
+    wrong: '/assets/r4x8q1.mp3',
     streak: '/assets/streak.mp3'
   };
 
@@ -16,9 +16,6 @@
   const clipCache = {};
 
   const patterns = {
-    correctFallback: [[0,523.25,.09,'sine',.045],[.08,659.25,.13,'sine',.05]],
-    wrongFallback: [[0,196,.11,'triangle',.04],[.1,146.83,.16,'triangle',.035]],
-    streakFallback: [[0,523.25,.08,'sine',.045],[.08,659.25,.08,'sine',.048],[.16,783.99,.1,'sine',.052],[.28,1046.5,.2,'sine',.055]],
     milestone: [[0,659.25,.08,'sine',.045],[.08,783.99,.08,'sine',.048],[.16,987.77,.16,'sine',.052]]
   };
 
@@ -69,21 +66,22 @@
     }catch(_){}
   }
 
-  function playClip(name,fallbackName){
+  function playClip(name){
     try{
       const clip=getClip(name);
-      if(!clip){ playPattern(fallbackName); return; }
+      if(!clip) return;
       clip.pause();
       clip.currentTime=0;
       const started=clip.play();
-      if(started && typeof started.catch==='function') started.catch(()=>playPattern(fallbackName));
-    }catch(_){ playPattern(fallbackName); }
+      if(started && typeof started.catch==='function') started.catch(()=>{});
+    }catch(_){}
   }
 
   function play(name){
-    if(name==='correct'){ playClip('correct','correctFallback'); return; }
-    if(name==='wrong'){ playClip('wrong','wrongFallback'); return; }
-    if(name==='streak'){ playClip('streak','streakFallback'); return; }
+    if(name==='correct' || name==='wrong' || name==='streak'){
+      playClip(name);
+      return;
+    }
     playPattern(name);
   }
 
