@@ -131,7 +131,8 @@
       .daily-card{border:1px solid #333;background:#000;color:#fff;border-radius:14px;padding:10px;min-width:0}
       .daily-card b{display:block;color:#fff;font-size:19px;line-height:1.15}
       .daily-card span{display:block;color:#fff;font-size:11px;line-height:1.3;margin-top:3px}
-      .daily-card.secured{border-color:#fff}
+      .daily-card.secured{border-color:#fff;box-shadow:0 0 0 1px #fff inset}
+      .daily-card.streak b{font-size:21px}
       .daily-toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(16px);width:min(420px,calc(100% - 28px));background:#fff;color:#000;border:2px solid #fff;border-radius:16px;padding:13px 15px;font-weight:900;text-align:center;opacity:0;pointer-events:none;transition:.22s ease;z-index:100}
       .daily-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
       @media(max-width:640px){.daily-study{grid-template-columns:1fr 1fr}}
@@ -153,6 +154,16 @@
     return panel;
   }
 
+  function streakStatus(day, streak, toSecure) {
+    if (day.qualified) {
+      return `${streak === 1 ? 'day' : 'days'} continuous · secured today`;
+    }
+    if (streak > 0) {
+      return `${toSecure} more questions today to keep it alive`;
+    }
+    return `${toSecure} more questions today to start a streak`;
+  }
+
   function render() {
     const today = dayKey();
     const day = normalizeDay(today);
@@ -165,8 +176,8 @@
     panel.innerHTML = `
       <div class="daily-card"><b>${day.count}</b><span>questions attempted today</span></div>
       <div class="daily-card"><b>${day.milestones}</b><span>10-question milestones today</span></div>
-      <div class="daily-card ${day.qualified ? 'secured' : ''}"><b>🔥 ${streak}</b><span>${day.qualified ? 'day streak · secured today' : streak ? `${toSecure} more to secure today` : `${toSecure} more to start today’s streak`}</span></div>
-      <div class="daily-card"><b>${toNext}</b><span>questions to next milestone · best streak ${state.longest || streak}</span></div>`;
+      <div class="daily-card streak ${day.qualified ? 'secured' : ''}"><b>🔥 ${streak}</b><span>${streakStatus(day, streak, toSecure)}</span></div>
+      <div class="daily-card"><b>${toNext}</b><span>questions to next milestone · best streak ${state.longest || streak} days</span></div>`;
   }
 
   let toastTimer;
@@ -205,7 +216,8 @@
 
     const crossedMilestone = Math.floor(day.count / MILESTONE_SIZE) > Math.floor(beforeCount / MILESTONE_SIZE);
     if (!beforeQualified && day.qualified) {
-      toast(`🔥 Daily streak secured — ${day.count} questions attempted`);
+      const streak = currentStreak(today);
+      toast(`🔥 ${streak} ${streak === 1 ? 'day' : 'day'} streak secured — ${day.count} questions today`);
     } else if (crossedMilestone) {
       toast(`🏁 Milestone ${day.milestones} reached — ${day.count} questions today`);
     }
