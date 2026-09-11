@@ -1,0 +1,33 @@
+{
+  "id": "/steel-structures/",
+  "name": "Steel Revision — BITS WILP",
+  "short_name": "Steel Revision",
+  "description": "Advanced Steel Structures revision app with textbook-chapter and lecture-wise modes.",
+  "start_url": "/steel-structures/revision.html",
+  "scope": "/steel-structures/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/steel-structures/steel-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Book chapters",
+      "short_name": "Book",
+      "url": "/steel-structures/revision.html"
+    },
+    {
+      "name": "Lecture-wise",
+      "short_name": "Lectures",
+      "url": "/steel-structures/lecture.html"
+    }
+  ]
+}
