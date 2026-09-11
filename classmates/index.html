@@ -19,7 +19,7 @@
 <script>
 (()=>{
 'use strict';
-const API='https://wilptest.aecbim.work',CLIENT_ID='810186188567-7a1mrhng391pmdjjtuemjefekoi9cg48.apps.googleusercontent.com',LIVE='https://wilp.aecbim.work',DOMAIN='@wilp.bits-pilani.ac.in';
+const API=location.origin,CLIENT_ID='810186188567-7a1mrhng391pmdjjtuemjefekoi9cg48.apps.googleusercontent.com',LIVE='https://wilp.aecbim.work',DOMAIN='@wilp.bits-pilani.ac.in';
 const $=s=>document.querySelector(s);let user=null,contacts=[];
 const setStatus=(el,msg,type='')=>{el.textContent=msg||'';el.className='status'+(type?' '+type:'')};
 async function api(path,options={}){const r=await fetch(API+path,{credentials:'include',cache:'no-store',...options,headers:{Accept:'application/json',...(options.headers||{})}});const data=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(data.error||`HTTP ${r.status}`);e.status=r.status;throw e}return data}
