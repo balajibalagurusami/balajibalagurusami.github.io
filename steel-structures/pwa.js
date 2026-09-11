@@ -1,7 +1,7 @@
 (() => {
   'use strict';
   if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => navigator.serviceWorker.register('/steel-structures/sw.js').catch(()=>{}));
+    window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js', {scope:'/'}).catch(()=>{}));
   }
 
   const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -26,7 +26,7 @@
   window.addEventListener('beforeinstallprompt', e => {
     e.preventDefault();
     deferredPrompt = e;
-    addButton('Install app', async () => {
+    addButton('Install WILP app', async () => {
       if (!deferredPrompt) return;
       deferredPrompt.prompt();
       try { await deferredPrompt.userChoice; } catch (_) {}
@@ -39,7 +39,7 @@
 
   window.addEventListener('DOMContentLoaded', () => {
     if (isIOS && !standalone) {
-      addButton('Add to Home', () => alert('On iPhone/iPad: tap Share, then “Add to Home Screen”.'));
+      addButton('Add WILP to Home', () => alert('On iPhone/iPad: tap Share, then “Add to Home Screen”.'));
     }
   });
 })();
