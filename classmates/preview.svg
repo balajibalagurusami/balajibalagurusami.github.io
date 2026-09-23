@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">BITS WILP Classmate Contacts</title>
+  <desc id="desc">Authenticated classmate contact exchange and VCF bundle for BITS WILP students.</desc>
+  <rect width="1200" height="630" fill="#000"/>
+  <rect x="56" y="56" width="1088" height="518" rx="34" fill="#050505" stroke="#fff" stroke-width="3"/>
+  <rect x="86" y="82" width="338" height="52" rx="26" fill="none" stroke="#5ee083" stroke-width="2"/>
+  <text x="112" y="116" fill="#5ee083" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700">BITS WILP · CLASSMATES</text>
+  <text x="88" y="260" fill="#fff" font-family="Arial, Helvetica, sans-serif" font-size="76" font-weight="700">Classmate Contacts</text>
+  <text x="90" y="345" fill="#c7c7c7" font-family="Arial, Helvetica, sans-serif" font-size="34">Share details securely and download the latest</text>
+  <text x="90" y="393" fill="#c7c7c7" font-family="Arial, Helvetica, sans-serif" font-size="34">classmate contact bundle as VCF.</text>
+  <text x="90" y="515" fill="#8ab4ff" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700">wilp.aecbim.work/classmates</text>
+</svg>
