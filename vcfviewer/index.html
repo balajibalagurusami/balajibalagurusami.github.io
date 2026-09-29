@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="BITS WILP VCF viewer with optional authenticated backend mapping for missing email and WhatsApp details.">
+<title>VCF Viewer · BITS WILP</title>
+<style>
+:root{color-scheme:dark;--bg:#000;--fg:#fff;--muted:#aaa;--line:#2b2b2b;--accent:#8ab4ff;--green:#5ee083;--red:#ff7b7b}
+*{box-sizing:border-box}html,body{min-height:100%;background:#000;color:#fff}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{width:min(1100px,calc(100% - 24px));margin:auto;padding:18px 0 48px}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.top a{color:var(--accent);text-decoration:none;font-weight:800}
+.card{border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:12px}
+h1{margin:0;font-size:clamp(30px,7vw,52px);letter-spacing:-.04em}p{line-height:1.5}.muted{color:var(--muted)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.btn{appearance:none;border:1px solid #555;background:#000;color:#fff;border-radius:12px;padding:11px 14px;font:inherit;font-weight:800;cursor:pointer}
+.btn:hover,.btn:focus-visible{border-color:#fff}.btn.primary{border-color:#fff}.btn.green{border-color:#285e3a;color:var(--green)}
+.file-btn{position:relative;overflow:hidden}.file-btn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.drop{border:1px dashed #555;border-radius:14px;padding:18px;text-align:center;color:var(--muted);margin-top:14px}.drop.drag{border-color:#fff;color:#fff}
+.search{width:100%;background:#070707;color:#fff;border:1px solid #383838;border-radius:12px;padding:12px 13px;font:inherit}
+.stats{display:flex;gap:18px;flex-wrap:wrap}.stat b{display:block;font-size:28px}.stat span{font-size:12px;color:var(--muted)}
+.table-wrap{margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:auto;max-height:68vh}
+table{width:100%;border-collapse:collapse;min-width:820px}th,td{padding:10px 11px;text-align:left;vertical-align:top;border-bottom:1px solid #202020}
+th{position:sticky;top:0;background:#080808;color:#bbb;font-size:12px;z-index:1}td{font-size:13px}
+.status{margin-top:10px;font-size:13px}.ok{color:var(--green)}.error{color:var(--red)}
+.pill{display:inline-block;border:1px solid #333;border-radius:999px;padding:3px 7px;font-size:11px;color:#bbb}
+.mapped{color:var(--green)} footer{text-align:center;color:#777;font-size:12px;margin-top:22px}
+@media(max-width:620px){.actions{display:grid}.btn{width:100%}.top{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><a href="/">← Semester 1 home</a><a href="/classmates/">Classmate Contacts</a></div>
+
+  <section class="card">
+    <h1>VCF Viewer + Mapper</h1>
+    <p class="muted">View and export VCF files locally. When this page is opened on <strong>wilp.aecbim.work</strong>, you can optionally fill missing BITS email/WhatsApp details from the authenticated backend.</p>
+
+    <div class="actions">
+      <label class="btn primary file-btn">Open VCF file(s)<input id="fileInput" type="file" accept=".vcf,text/vcard,text/x-vcard" multiple></label>
+      <button id="mapBtn" class="btn" type="button">Map missing via backend</button>
+      <button id="exportBtn" class="btn green" type="button">Export CSV</button>
+      <button id="clearBtn" class="btn" type="button">Clear</button>
+    </div>
+
+    <div id="dropZone" class="drop">Drag & drop .vcf files here</div>
+    <div id="status" class="status"></div>
+  </section>
+
+  <section class="card">
+    <div class="stats">
+      <div class="stat"><b id="contactCount">0</b><span>contacts</span></div>
+      <div class="stat"><b id="missingEmailCount">0</b><span>missing email</span></div>
+      <div class="stat"><b id="missingPhoneCount">0</b><span>missing phone</span></div>
+      <div class="stat"><b id="mappedCount">0</b><span>backend mapped</span></div>
+    </div>
+
+    <div style="margin-top:14px"><input id="search" class="search" type="search" placeholder="Search name, phone, email, organisation..."></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Organisation</th><th>Title</th><th>Mapping</th><th>Source</th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="7" class="muted">No contacts loaded.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>VCF parsing stays in your browser. Backend mapping requires an authenticated BITS WILP session.</footer>
+</main>
+<script>
+(() => {
+'use strict';
+const $=s=>document.querySelector(s), fileInput=$('#fileInput'), dropZone=$('#dropZone'), tbody=$('#tbody'), search=$('#search'), status=$('#status');
+const LIVE='https://wilp.aecbim.work'; let contacts=[];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const setStatus=(m,c='')=>{status.textContent=m||'';status.className='status '+c};
+
+function unfold(t){return t.replace(/\r\n[ \t]/g,'').replace(/\n[ \t]/g,'').replace(/\r[ \t]/g,'')}
+function decodeQP(s){try{return s.replace(/=\r?\n/g,'').replace(/=([A-Fa-f0-9]{2})/g,(_,h)=>String.fromCharCode(parseInt(h,16)))}catch{return s}}
+function decodeVal(raw,p=''){let v=raw??'';if(/ENCODING=QUOTED-PRINTABLE/i.test(p))v=decodeQP(v);return v.replace(/\\n/gi,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\').trim()}
+function parseBlock(block,source){
+ const c={name:'',family:'',given:'',phones:[],emails:[],org:'',title:'',source,mapped:false,matchedBy:null,filled:{email:false,whatsapp:false}};
+ for(const line of unfold(block).split(/\r?\n/)){
+  if(!line||/^(BEGIN|END|VERSION):/i.test(line))continue; const i=line.indexOf(':'); if(i<0)continue;
+  const left=line.slice(0,i),raw=line.slice(i+1),parts=left.split(';'),prop=parts.shift().split('.').pop().toUpperCase(),params=parts.join(';'),value=decodeVal(raw,params);
+  if(prop==='FN')c.name=value;
+  else if(prop==='N'){const p=raw.split(';').map(x=>decodeVal(x,params));c.family=p[0]||'';c.given=p[1]||''}
+  else if(prop==='TEL')c.phones.push(value);
+  else if(prop==='EMAIL')c.emails.push(value);
+  else if(prop==='ORG')c.org=value.replace(/;/g,' · ');
+  else if(prop==='TITLE')c.title=value;
+ }
+ if(!c.name)c.name=[c.given,c.family].filter(Boolean).join(' ').trim()||'Unnamed contact';
+ return c;
+}
+function parseVCF(text,source){const n=text.replace(/\r\n/g,'\n').replace(/\r/g,'\n'),blocks=n.match(/BEGIN:VCARD[\s\S]*?END:VCARD/gi)||[];return blocks.map(b=>parseBlock(b,source))}
+async function loadFiles(list){
+ const files=[...list].filter(f=>/\.vcf$/i.test(f.name)||/vcard/i.test(f.type||'')); if(!files.length)return setStatus('Choose a .vcf file.','error');
+ const out=[]; for(const f of files){try{out.push(...parseVCF(await f.text(),f.name))}catch(e){console.error(e)}}
+ contacts=out;search.value='';render();setStatus('Loaded '+contacts.length+' contacts.','ok')
+}
+function filtered(){const q=search.value.trim().toLowerCase();if(!q)return contacts;return contacts.filter(c=>[c.name,c.org,c.title,...c.phones,...c.emails].join(' ').toLowerCase().includes(q))}
+function render(){
+ $('#contactCount').textContent=contacts.length;
+ $('#missingEmailCount').textContent=contacts.filter(c=>!c.emails.length).length;
+ $('#missingPhoneCount').textContent=contacts.filter(c=>!c.phones.length).length;
+ $('#mappedCount').textContent=contacts.filter(c=>c.mapped).length;
+ const list=filtered(); if(!contacts.length){tbody.innerHTML='<tr><td colspan="7" class="muted">No contacts loaded.</td></tr>';return}
+ if(!list.length){tbody.innerHTML='<tr><td colspan="7" class="muted">No matching contacts.</td></tr>';return}
+ tbody.innerHTML=list.map(c=>`<tr><td>${esc(c.name)}</td><td>${c.phones.map(esc).join('<br>')}</td><td>${c.emails.map(esc).join('<br>')}</td><td>${esc(c.org)}</td><td>${esc(c.title)}</td><td>${c.mapped?'<span class="pill mapped">Mapped by '+esc(c.matchedBy||'backend')+'</span>':'<span class="pill">Original</span>'}</td><td>${esc(c.source)}</td></tr>`).join('')
+}
+async function mapMissing(){
+ if(!contacts.length)return setStatus('Load a VCF file first.','error');
+ if(location.origin!==LIVE)return setStatus('Backend mapping works only on wilp.aecbim.work. The viewer/exporter still works offline.','error');
+ setStatus('Mapping missing fields…');
+ try{
+  const payload={contacts:contacts.map(c=>({name:c.name,email:c.emails[0]||'',whatsapp:c.phones[0]||''}))};
+  const r=await fetch('/api/classmates/map',{method:'POST',credentials:'include',cache:'no-store',headers:{'Content-Type':'text/plain;charset=UTF-8','Accept':'application/json'},body:JSON.stringify(payload)});
+  const data=await r.json().catch(()=>({}));
+  if(r.status===401){setStatus('Sign in at Classmate Contacts first, then return here and map again.','error');return}
+  if(!r.ok)throw new Error(data.error||('HTTP '+r.status));
+  (data.contacts||[]).forEach((m,i)=>{const c=contacts[i];if(!c)return;if(!c.emails.length&&m.email)c.emails=[m.email];if(!c.phones.length&&m.whatsapp)c.phones=[m.whatsapp];c.mapped=!!m.mapped;c.matchedBy=m.matchedBy||null;c.filled=m.filled||{email:false,whatsapp:false}});
+  render();setStatus('Mapped '+(data.mapped||0)+' contacts. '+(data.unresolved||0)+' still have a missing email or phone.','ok')
+ }catch(e){setStatus('Backend mapping failed: '+e.message,'error')}
+}
+function csvEsc(v=''){const s=String(v).replace(/\r?\n/g,' ');return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+function exportCSV(){
+ if(!contacts.length)return setStatus('Load a VCF file first.','error');
+ const rows=[['Name','Phones','Emails','Organisation','Title','Mapped','Matched By','Source']];
+ for(const c of filtered())rows.push([c.name,c.phones.join(' | '),c.emails.join(' | '),c.org,c.title,c.mapped?'Yes':'No',c.matchedBy||'',c.source]);
+ const csv='\uFEFF'+rows.map(r=>r.map(csvEsc).join(',')).join('\r\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='vcf-contacts-enriched.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);setStatus('CSV exported.','ok')
+}
+fileInput.addEventListener('change',e=>loadFiles(e.target.files));search.addEventListener('input',render);$('#mapBtn').addEventListener('click',mapMissing);$('#exportBtn').addEventListener('click',exportCSV);
+$('#clearBtn').addEventListener('click',()=>{contacts=[];search.value='';fileInput.value='';setStatus('');render()});
+['dragenter','dragover'].forEach(ev=>dropZone.addEventListener(ev,e=>{e.preventDefault();dropZone.classList.add('drag')}));
+['dragleave','drop'].forEach(ev=>dropZone.addEventListener(ev,e=>{e.preventDefault();dropZone.classList.remove('drag')}));
+dropZone.addEventListener('drop',e=>loadFiles(e.dataTransfer.files));render();
+})();
+</script>
+</body></html>
