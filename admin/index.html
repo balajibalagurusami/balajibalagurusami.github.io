@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex,nofollow">
+<title>Site Author Console · BITS WILP</title>
+<style>
+:root{color-scheme:dark;--bg:#000;--ink:#fff;--muted:#aaa;--line:#303030;--accent:#8ab4ff;--green:#5ee083;--red:#ff7b7b}
+*{box-sizing:border-box}html,body{min-height:100%;background:#000;color:#fff}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{width:min(920px,calc(100% - 24px));margin:auto;padding:18px 0 60px}
+a{color:var(--accent)}.top{display:flex;justify-content:space-between;gap:10px;align-items:center}.top a{text-decoration:none;font-weight:800}
+.card{border:1px solid var(--line);border-radius:20px;padding:20px;margin-top:14px}.hidden{display:none!important}
+h1{margin:0;font-size:clamp(34px,7vw,52px);letter-spacing:-.04em}.muted{color:var(--muted);line-height:1.55}
+.badge{display:inline-block;border:1px solid #285e3a;color:var(--green);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:850}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.tile{display:block;border:1px solid var(--line);border-radius:16px;padding:16px;text-decoration:none;color:#fff;min-height:112px}
+.tile:hover,.tile:focus-visible{border-color:#fff;outline:none}.tile b{display:block}.tile span{display:block;color:var(--muted);font-size:12px;margin-top:5px;line-height:1.4}
+.field{margin-top:14px}.field label{display:block;font-size:12px;font-weight:850;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;background:#070707;color:#fff;border:1px solid #383838;border-radius:12px;padding:12px;font:inherit}
+.field textarea{min-height:220px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
+.btn{appearance:none;border:1px solid #555;background:#000;color:#fff;border-radius:12px;padding:11px 14px;font:inherit;font-weight:850;cursor:pointer;text-decoration:none}
+.btn:hover,.btn:focus-visible{border-color:#fff;outline:none}.primary{border-color:#fff}.green{border-color:#285e3a;color:var(--green)}
+.status{margin-top:12px;font-size:13px;line-height:1.5}.ok{color:var(--green)}.error{color:var(--red)}
+.path{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--green);overflow-wrap:anywhere}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.actions{display:grid}.btn{width:100%}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<div class="top"><a href="/">← Semester 1 home</a><span class="badge">Admin authoring</span></div>
+
+<section class="card">
+<h1>Site Author Console</h1>
+<p class="muted">Create or edit static pages through GitHub so every change has commit history and rollback. No GitHub token is stored in this website.</p>
+<div id="authStatus" class="status">Checking admin access…</div>
+</section>
+
+<section id="console" class="card hidden">
+<h2>Quick actions</h2>
+<div class="grid">
+<a class="tile" id="editHome" target="_blank" rel="noopener"><b>✎ Edit homepage</b><span>Edit the root index.html directly in GitHub.</span></a>
+<button class="tile" type="button" data-kind="page"><b>＋ New root page</b><span>Create /your-page/index.html.</span></button>
+<button class="tile" type="button" data-kind="subpage"><b>＋ New subpage</b><span>Create a nested page under an existing section.</span></button>
+<button class="tile" type="button" data-kind="quiz"><b>＋ New quiz</b><span>Create a standalone quiz HTML page under a course folder.</span></button>
+<button class="tile" type="button" data-kind="flashcards"><b>＋ New flash cards</b><span>Create a standalone flash-card page.</span></button>
+<a class="tile" id="uploadRoot" target="_blank" rel="noopener"><b>⇧ Upload / host files</b><span>Upload HTML, CSS, JS, images, PDFs and other static assets to the repository.</span></a>
+<a class="tile" id="repoFiles" target="_blank" rel="noopener"><b>▦ Browse all site files</b><span>Open the root repository tree and edit existing files.</span></a>
+<a class="tile" href="/classmates/"><b>📇 Classmate admin</b><span>Edit directory numbers and roster data.</span></a>
+</div>
+</section>
+
+<section id="builder" class="card hidden">
+<h2 id="builderTitle">Create page</h2>
+<div class="field"><label for="kind">Content type</label><select id="kind"><option value="page">Root page</option><option value="subpage">Subpage</option><option value="quiz">Quiz page</option><option value="flashcards">Flash-card page</option></select></div>
+<div class="field"><label for="parent">Parent folder</label><input id="parent" placeholder="e.g. finite-element-analysis"></div>
+<div class="field"><label for="slug">Page slug / filename</label><input id="slug" placeholder="e.g. practice-set-2"></div>
+<div class="field"><label for="title">Page title</label><input id="title" placeholder="e.g. FEA Practice Set 2"></div>
+<p class="muted">Target: <span id="targetPath" class="path"></span></p>
+<div class="field"><label for="starter">Starter HTML</label><textarea id="starter"></textarea></div>
+<div class="actions">
+<button id="copyStarter" class="btn" type="button">Copy starter HTML</button>
+<a id="openNew" class="btn primary" target="_blank" rel="noopener">Open GitHub new-file editor</a>
+<a id="uploadHere" class="btn green" target="_blank" rel="noopener">Upload files here</a>
+</div>
+<div id="builderStatus" class="status"></div>
+</section>
+</main>
+<script>
+(()=>{'use strict';
+const REPO='balajibalagurusami/balajibalagurusami.github.io',BASE='https://github.com/'+REPO,ADMIN_API='/api/classmates/me';
+const $=s=>document.querySelector(s);let isAdmin=false;
+function status(msg,type=''){const el=$('#authStatus');el.textContent=msg;el.className='status '+type}
+function cleanPath(v){return String(v||'').trim().replace(/^\/+|\/+$/g,'').replace(/[^a-zA-Z0-9._\/-]+/g,'-').replace(/\/+/g,'/')}
+function slug(v){return cleanPath(v).toLowerCase().replace(/\.html?$/i,'')}
+function target(){
+ const kind=$('#kind').value,parent=cleanPath($('#parent').value),s=slug($('#slug').value)||'new-page';
+ if(kind==='page')return s+'/index.html';
+ if(kind==='quiz')return (parent?parent+'/':'')+s+'.html';
+ if(kind==='flashcards')return 'flashcards/'+s+'/index.html';
+ return (parent?parent+'/':'')+s+'/index.html';
+}
+function template(){
+ const t=$('#title').value.trim()||'New BITS WILP Page',kind=$('#kind').value;
+ if(kind==='quiz')return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000"><title>${t}</title><style>body{margin:0;background:#000;color:#fff;font-family:system-ui}.wrap{width:min(900px,calc(100% - 24px));margin:auto;padding:24px}.card{border:1px solid #333;border-radius:18px;padding:18px;margin-top:12px}button{background:#000;color:#fff;border:1px solid #555;border-radius:10px;padding:10px}</style></head><body><main class="wrap"><a href="/">← Home</a><section class="card"><h1>${t}</h1><p>Add quiz questions and reveal logic here.</p></section></main></body></html>`;
+ if(kind==='flashcards')return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000"><title>${t}</title><style>body{margin:0;background:#000;color:#fff;font-family:system-ui}.wrap{width:min(900px,calc(100% - 24px));margin:auto;padding:24px}.card{border:1px solid #333;border-radius:18px;padding:22px;margin-top:12px;cursor:pointer}</style></head><body><main class="wrap"><a href="/">← Home</a><h1>${t}</h1><div class="card" onclick="this.querySelector('[data-back]').hidden=!this.querySelector('[data-back]').hidden"><b>Front: add prompt</b><p data-back hidden>Back: add answer</p></div></main></body></html>`;
+ return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#000"><title>${t}</title><style>body{margin:0;background:#000;color:#fff;font-family:system-ui}.wrap{width:min(900px,calc(100% - 24px));margin:auto;padding:24px}.card{border:1px solid #333;border-radius:18px;padding:20px;margin-top:12px}a{color:#8ab4ff}</style></head><body><main class="wrap"><a href="/">← Home</a><section class="card"><h1>${t}</h1><p>Add page content here.</p></section></main></body></html>`;
+}
+function refresh(){
+ const p=target(),folder=p.includes('/')?p.slice(0,p.lastIndexOf('/')):'';
+ $('#targetPath').textContent=p;$('#starter').value=template();
+ $('#openNew').href=BASE+'/new/main?filename='+encodeURIComponent(p);
+ $('#uploadHere').href=BASE+'/upload/main'+(folder?'/'+folder:'');
+}
+function openBuilder(kind,parent=''){
+ $('#builder').classList.remove('hidden');$('#kind').value=kind||'page';$('#parent').value=parent||'';$('#slug').value='';$('#title').value='';
+ $('#builderTitle').textContent={page:'Create root page',subpage:'Create subpage',quiz:'Create quiz page',flashcards:'Create flash-card page'}[kind]||'Create page';
+ refresh();$('#builder').scrollIntoView({behavior:'smooth',block:'start'});
+}
+['kind','parent','slug','title'].forEach(id=>$('#'+id).addEventListener('input',refresh));
+document.querySelectorAll('[data-kind]').forEach(b=>b.addEventListener('click',()=>openBuilder(b.dataset.kind,'')));
+$('#copyStarter').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('#starter').value);$('#builderStatus').textContent='Starter HTML copied. Paste it into the GitHub editor.';$('#builderStatus').className='status ok'}catch{const t=$('#starter');t.focus();t.select();document.execCommand('copy');$('#builderStatus').textContent='Starter HTML copied.';$('#builderStatus').className='status ok'}});
+const q=new URLSearchParams(location.search),action=q.get('action'),parent=q.get('parent')||'';
+(async()=>{
+ try{
+  const r=await fetch(ADMIN_API,{credentials:'include',cache:'no-store',headers:{Accept:'application/json'}}),d=await r.json().catch(()=>({}));
+  isAdmin=!!(r.ok&&d.authenticated&&d.user&&d.user.isAdmin);
+  if(!isAdmin)throw new Error('Admin access is required. Sign in at Classmate Contacts with an authorised BITS account.');
+  status('Admin verified: '+d.user.email,'ok');$('#console').classList.remove('hidden');
+  $('#editHome').href=BASE+'/edit/main/index.html';$('#uploadRoot').href=BASE+'/upload/main';$('#repoFiles').href=BASE+'/tree/main';
+  if(action){const kind=action==='new-subpage'?'subpage':action==='new-quiz'?'quiz':action==='new-flashcards'?'flashcards':'page';openBuilder(kind,parent)}
+ }catch(e){status(e.message,'error')}
+})();
+})();
+</script>
+</body></html>
