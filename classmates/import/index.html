@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<title>Import Classmate Roster · BITS WILP</title>
+<style>
+:root{color-scheme:dark;--bg:#000;--fg:#fff;--muted:#aaa;--line:#303030;--accent:#8ab4ff;--green:#5ee083;--red:#ff7b7b}
+*{box-sizing:border-box}html,body{min-height:100%;background:#000;color:#fff}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{width:min(760px,calc(100% - 24px));margin:auto;padding:18px 0 48px}
+a{color:var(--accent);text-decoration:none;font-weight:800}.card{border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:14px}
+h1{margin:0;font-size:clamp(30px,7vw,48px);letter-spacing:-.04em}.muted{color:var(--muted);line-height:1.55}
+.btn{appearance:none;border:1px solid #555;background:#000;color:#fff;border-radius:12px;padding:11px 14px;font:inherit;font-weight:800;cursor:pointer}
+.btn:hover,.btn:focus-visible{border-color:#fff}.primary{border-color:#fff}.green{border-color:#285e3a;color:var(--green)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.filebtn{position:relative;overflow:hidden}.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.status{margin-top:12px;line-height:1.5}.ok{color:var(--green)}.error{color:var(--red)}
+pre{white-space:pre-wrap;word-break:break-word;background:#080808;border:1px solid #222;border-radius:12px;padding:12px;color:#bbb}
+@media(max-width:600px){.actions{display:grid}.btn{width:100%}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<a href="/classmates/">← Classmate Contacts</a>
+<section class="card">
+<h1>Import roster</h1>
+<p class="muted">Admin-only one-time import. Choose the 240-student CSV locally; the browser sends it directly to the authenticated D1 Worker. The CSV is not uploaded to GitHub Pages.</p>
+<div id="authStatus" class="status">Checking sign-in…</div>
+<div class="actions">
+<label class="btn filebtn">Choose roster CSV<input id="fileInput" type="file" accept=".csv,text/csv"></label>
+<button id="importBtn" class="btn primary" type="button" disabled>Import into D1</button>
+<button id="healthBtn" class="btn green" type="button">Check D1 counts</button>
+</div>
+<div id="fileStatus" class="status"></div>
+<pre id="result">No roster loaded yet.</pre>
+</section>
+</main>
+<script>
+(()=>{'use strict';
+const $=s=>document.querySelector(s);let rows=[];
+function set(el,msg,cls=''){el.textContent=msg;el.className='status '+cls}
+async function api(path,options={}){const r=await fetch(path,{credentials:'include',cache:'no-store',...options,headers:{Accept:'application/json',...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok){const e=new Error(d.error||('HTTP '+r.status));e.status=r.status;throw e}return d}
+function parseCSV(text){
+ const out=[];let row=[],field='',q=false;
+ for(let i=0;i<text.length;i++){const ch=text[i];
+  if(q){if(ch==='"'&&text[i+1]==='"'){field+='"';i++}else if(ch==='"'){q=false}else field+=ch}
+  else if(ch==='"'){q=true}
+  else if(ch===','){row.push(field);field=''}
+  else if(ch==='\n'){row.push(field);out.push(row);row=[];field=''}
+  else if(ch!=='\r')field+=ch
+ }
+ if(field.length||row.length){row.push(field);out.push(row)}
+ return out;
+}
+function normalize(parsed){
+ if(!parsed.length)return[];
+ const header=parsed[0].map(x=>x.replace(/^\uFEFF/,'').trim().toLowerCase());
+ const idx=(...names)=>{for(const n of names){const i=header.indexOf(n);if(i>=0)return i}return-1};
+ const sid=idx('student id','studentid'),short=idx('shortid','short id'),name=idx('name'),phone=idx('whatsapp','phone'),email=idx('email');
+ return parsed.slice(1).filter(r=>r.some(v=>String(v).trim())).map(r=>({
+  studentId:String(r[sid]||'').trim(),
+  shortId:String(r[short]||'').trim(),
+  name:String(r[name]||'').trim(),
+  whatsapp:String(r[phone]||'').trim()==='#N/A'?'':String(r[phone]||'').trim(),
+  email:String(r[email]||'').trim().replace('\\@','@').toLowerCase()
+ }));
+}
+async function health(){
+ try{const h=await api('/api/classmates/health');$('#result').textContent=JSON.stringify(h,null,2)}
+ catch(e){$('#result').textContent='Health check failed: '+e.message}
+}
+$('#fileInput').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;rows=normalize(parseCSV(await f.text()));$('#importBtn').disabled=!rows.length;set($('#fileStatus'),'Parsed '+rows.length+' roster rows.',rows.length?'ok':'error')});
+$('#importBtn').addEventListener('click',async()=>{if(!rows.length)return;$('#importBtn').disabled=true;set($('#fileStatus'),'Importing '+rows.length+' rows…');try{const d=await api('/api/classmates/admin/import-roster',{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},body:JSON.stringify({rows})});set($('#fileStatus'),'Import complete: '+d.imported+' imported, '+d.skipped+' skipped.','ok');await health()}catch(e){set($('#fileStatus'),'Import failed: '+e.message,'error')}finally{$('#importBtn').disabled=false}});
+$('#healthBtn').addEventListener('click',health);
+(async()=>{try{const me=await api('/api/classmates/me');set($('#authStatus'),'Signed in as '+(me.user?.email||''),'ok')}catch(e){set($('#authStatus'),'Sign in at /classmates/ first. '+e.message,'error')}await health()})();
+})();
+</script>
+</body></html>
