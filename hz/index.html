@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>30-Second Frequency Ringtone Generator</title>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color-scheme: light dark;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #111827;
+      color: #f9fafb;
+      padding: 18px;
+      box-sizing: border-box;
+    }
+    .card {
+      width: min(520px, 100%);
+      background: #1f2937;
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 18px 55px rgba(0,0,0,.35);
+      box-sizing: border-box;
+    }
+    h1 {
+      font-size: 1.45rem;
+      margin: 0 0 8px;
+    }
+    p {
+      color: #cbd5e1;
+      margin-top: 0;
+      line-height: 1.45;
+    }
+    label {
+      display: block;
+      font-weight: 700;
+      margin: 18px 0 8px;
+    }
+    input, select, button {
+      width: 100%;
+      box-sizing: border-box;
+      border-radius: 12px;
+      border: 1px solid #475569;
+      padding: 13px 14px;
+      font-size: 1rem;
+    }
+    input, select {
+      background: #0f172a;
+      color: #f8fafc;
+    }
+    input[type="range"] {
+      padding: 0;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    button {
+      border: 0;
+      cursor: pointer;
+      font-weight: 800;
+      margin-top: 12px;
+    }
+    .primary { background: #22c55e; color: #052e16; }
+    .secondary { background: #38bdf8; color: #082f49; }
+    .danger { background: #fb7185; color: #4c0519; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .status {
+      min-height: 24px;
+      margin-top: 14px;
+      color: #e2e8f0;
+      font-size: .95rem;
+    }
+    .small {
+      font-size: .82rem;
+      color: #94a3b8;
+      margin-top: 14px;
+    }
+    .value {
+      font-weight: 800;
+      color: #7dd3fc;
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>30-Second MP3 Ringtone Generator</h1>
+    <p>Generate a pure tone at any frequency, preview it, then save it as an MP3 ringtone.</p>
+
+    <label for="frequency">Frequency (Hz)</label>
+    <input id="frequency" type="number" min="20" max="20000" step="1" value="440" />
+
+    <label for="waveform">Waveform</label>
+    <select id="waveform">
+      <option value="sine">Sine</option>
+      <option value="square">Square</option>
+      <option value="triangle">Triangle</option>
+      <option value="sawtooth">Sawtooth</option>
+    </select>
+
+    <label for="volume">Volume: <span id="volumeValue" class="value">70%</span></label>
+    <input id="volume" type="range" min="1" max="100" value="70" />
+
+    <div class="row">
+      <button id="previewBtn" class="secondary">▶ Preview</button>
+      <button id="stopBtn" class="danger" disabled>■ Stop</button>
+    </div>
+
+    <button id="generateBtn" class="primary">Generate 30-Second MP3</button>
+
+    <div id="status" class="status"></div>
+    <div class="small">
+      Recommended ringtone range: roughly 300–3000 Hz. Very low or very high frequencies may be hard to hear on phone speakers.
+    </div>
+  </main>
+
+  <!-- MP3 encoder -->
+  <script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.1/lame.min.js"></script>
+
+  <script>
+    const frequencyEl = document.getElementById('frequency');
+    const waveformEl = document.getElementById('waveform');
+    const volumeEl = document.getElementById('volume');
+    const volumeValueEl = document.getElementById('volumeValue');
+    const previewBtn = document.getElementById('previewBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const generateBtn = document.getElementById('generateBtn');
+    const statusEl = document.getElementById('status');
+
+    let audioCtx = null;
+    let oscillator = null;
+    let gainNode = null;
+
+    volumeEl.addEventListener('input', () => {
+      volumeValueEl.textContent = volumeEl.value + '%';
+      if (gainNode) gainNode.gain.value = Number(volumeEl.value) / 100;
+    });
+
+    function validateFrequency() {
+      const f = Number(frequencyEl.value);
+      if (!Number.isFinite(f) || f < 20 || f > 20000) {
+        throw new Error('Enter a frequency between 20 Hz and 20,000 Hz.');
+      }
+      return f;
+    }
+
+    function stopPreview() {
+      if (oscillator) {
+        try { oscillator.stop(); } catch(e) {}
+        oscillator.disconnect();
+        oscillator = null;
+      }
+      if (gainNode) {
+        gainNode.disconnect();
+        gainNode = null;
+      }
+      previewBtn.disabled = false;
+      stopBtn.disabled = true;
+    }
+
+    previewBtn.addEventListener('click', async () => {
+      try {
+        const f = validateFrequency();
+        stopPreview();
+
+        audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+        await audioCtx.resume();
+
+        oscillator = audioCtx.createOscillator();
+        gainNode = audioCtx.createGain();
+
+        oscillator.type = waveformEl.value;
+        oscillator.frequency.value = f;
+        gainNode.gain.value = Number(volumeEl.value) / 100;
+
+        oscillator.connect(gainNode).connect(audioCtx.destination);
+        oscillator.start();
+
+        previewBtn.disabled = true;
+        stopBtn.disabled = false;
+        statusEl.textContent = `Playing ${f} Hz ${waveformEl.value} tone.`;
+      } catch (err) {
+        statusEl.textContent = err.message;
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      stopPreview();
+      statusEl.textContent = 'Preview stopped.';
+    });
+
+    function sampleForWaveform(type, phase) {
+      switch (type) {
+        case 'square':
+          return Math.sin(phase) >= 0 ? 1 : -1;
+        case 'triangle':
+          return (2 / Math.PI) * Math.asin(Math.sin(phase));
+        case 'sawtooth': {
+          const cycles = phase / (2 * Math.PI);
+          return 2 * (cycles - Math.floor(cycles + 0.5));
+        }
+        default:
+          return Math.sin(phase);
+      }
+    }
+
+    generateBtn.addEventListener('click', async () => {
+      try {
+        const frequency = validateFrequency();
+        if (typeof lamejs === 'undefined') {
+          throw new Error('MP3 encoder could not load. Connect to the internet and reopen the page.');
+        }
+
+        stopPreview();
+        generateBtn.disabled = true;
+        statusEl.textContent = 'Generating MP3...';
+
+        // Yield so the UI can update.
+        await new Promise(r => setTimeout(r, 50));
+
+        const duration = 30;
+        const sampleRate = 44100;
+        const channels = 1;
+        const kbps = 128;
+        const volume = Number(volumeEl.value) / 100;
+        const waveform = waveformEl.value;
+
+        const totalSamples = duration * sampleRate;
+        const samples = new Int16Array(totalSamples);
+
+        // 20 ms fade-in/out helps avoid clicks.
+        const fadeSamples = Math.floor(sampleRate * 0.02);
+
+        for (let i = 0; i < totalSamples; i++) {
+          const t = i / sampleRate;
+          const phase = 2 * Math.PI * frequency * t;
+          let amp = volume;
+
+          if (i < fadeSamples) amp *= i / fadeSamples;
+          if (i > totalSamples - fadeSamples) {
+            amp *= (totalSamples - i) / fadeSamples;
+          }
+
+          const s = sampleForWaveform(waveform, phase);
+          samples[i] = Math.max(-32767, Math.min(32767, Math.round(s * amp * 32767)));
+        }
+
+        const encoder = new lamejs.Mp3Encoder(channels, sampleRate, kbps);
+        const mp3Data = [];
+        const blockSize = 1152;
+
+        for (let i = 0; i < samples.length; i += blockSize) {
+          const chunk = samples.subarray(i, i + blockSize);
+          const buf = encoder.encodeBuffer(chunk);
+          if (buf.length > 0) mp3Data.push(new Int8Array(buf));
+
+          if (i % (blockSize * 100) === 0) {
+            const pct = Math.min(99, Math.round((i / samples.length) * 100));
+            statusEl.textContent = `Encoding MP3... ${pct}%`;
+            await new Promise(r => setTimeout(r, 0));
+          }
+        }
+
+        const end = encoder.flush();
+        if (end.length > 0) mp3Data.push(new Int8Array(end));
+
+        const blob = new Blob(mp3Data, { type: 'audio/mpeg' });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ringtone_${frequency}Hz_30sec.mp3`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+        statusEl.textContent = `Done: ${frequency} Hz, ${waveform}, 30 seconds, 128 kbps MP3.`;
+      } catch (err) {
+        statusEl.textContent = err.message;
+      } finally {
+        generateBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
