@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1324">
+<title>Lecture 09 — MDOF Modelling | Dynamics of Structures</title>
+<style>
+:root{--bg:#07101f;--panel:#0d1a2d;--panel2:#13243d;--ink:#f7fbff;--muted:#a9bad0;--line:#274263;--blue:#62a8ff;--green:#5dd39e;--amber:#ffc857;--red:#ff7b7b;--chip:#152a46;--eq:#091729}
+[data-theme="light"]{--bg:#f3f6fb;--panel:#fff;--panel2:#edf3fb;--ink:#102a43;--muted:#627d98;--line:#d4deea;--blue:#2f6fdd;--green:#2f9e44;--amber:#b76e00;--red:#c92a2a;--chip:#edf3fb;--eq:#f6f9fd}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}button,input{font:inherit}button{touch-action:manipulation}.wrap{max-width:980px;margin:auto;padding:14px 14px 110px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}.brand b{font-size:18px}.small{color:var(--muted);font-size:13px;line-height:1.4}.topBtns{display:flex;gap:7px}.iconBtn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:12px;padding:9px 11px;font-weight:800}.hero{background:linear-gradient(145deg,#102f54,#0a1c34);border:1px solid #31557d;padding:20px;border-radius:24px;box-shadow:0 12px 36px #0004}.hero h1{font-size:clamp(30px,7vw,48px);line-height:1;margin:.2rem 0 .5rem}.hero p{max-width:760px;line-height:1.5;color:#d5e5f7}.hero .eyebrow{font-size:12px;font-weight:900;color:#8ec3ff;letter-spacing:.08em;text-transform:uppercase}.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.chip{background:#ffffff14;border:1px solid #ffffff22;border-radius:999px;padding:7px 9px;font-size:12px;font-weight:800}.nav{display:flex;gap:7px;overflow:auto;position:sticky;top:0;padding:10px 0;background:linear-gradient(var(--bg) 80%,transparent);z-index:10}.nav a{white-space:nowrap;text-decoration:none;color:var(--ink);background:var(--panel);border:1px solid var(--line);padding:9px 11px;border-radius:12px;font-weight:800;font-size:13px}.card{background:var(--panel);border:1px solid var(--line);border-radius:20px;margin:12px 0;padding:16px}.card h2{margin:.1rem 0 .5rem;font-size:22px}.card h3{margin:.7rem 0 .35rem}.note{border-left:4px solid var(--blue);padding:10px 12px;background:var(--panel2);border-radius:10px;line-height:1.5}.eq{font-family:"Cambria Math","STIX Two Math",serif;background:var(--eq);border:1px solid var(--line);border-radius:13px;padding:12px;margin:8px 0;overflow:auto;font-size:clamp(16px,4vw,20px);line-height:1.6}.eq b{color:var(--amber)}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.svgbox{background:var(--eq);border:1px solid var(--line);border-radius:16px;padding:10px;overflow:auto}.svgbox svg{width:100%;height:auto;min-width:520px}.stepper{margin-top:10px}.step{display:none;border:1px solid var(--line);background:var(--panel2);border-radius:15px;padding:13px;margin:8px 0}.step.show{display:block}.step .n{display:inline-flex;width:28px;height:28px;border-radius:50%;align-items:center;justify-content:center;background:var(--blue);color:#fff;font-weight:900;margin-right:7px}.step b{color:var(--amber)}.matrixWrap{overflow:auto}.matrix{border-collapse:collapse;margin:8px 0;font-family:"Cambria Math",serif;font-size:18px}.matrix td{padding:7px 13px;text-align:center;border-left:1px solid transparent}.matrixBox{display:inline-block;border-left:2px solid var(--ink);border-right:2px solid var(--ink);padding:2px 0;margin:4px}.cases{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.case{border:1px solid var(--line);background:var(--panel2);border-radius:15px;padding:13px;cursor:pointer}.case.on{outline:2px solid var(--blue)}.case b{display:block;margin-bottom:5px}.case .eq{font-size:16px;padding:9px}.builder{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.group{background:var(--panel2);border:1px solid var(--line);border-radius:15px;padding:12px}.group label{display:grid;grid-template-columns:1fr 100px;gap:8px;align-items:center;margin:7px 0;font-size:13px}.group input{width:100%;padding:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:9px}.quizQ{padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);margin:10px 0}.choice{width:100%;text-align:left;margin:5px 0;padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink)}.choice.good{border-color:var(--green);background:#16412e}.choice.bad{border-color:var(--red);background:#421c26}.reveal{display:none;margin-top:8px;padding:10px;border-radius:10px;background:var(--eq);border:1px solid var(--line);line-height:1.5}.primary,.secondary{border-radius:13px;padding:12px 14px;font-weight:900}.primary{background:var(--blue);color:#fff;border:0}.secondary{background:var(--panel);border:1px solid var(--line);color:var(--ink)}.footer{color:var(--muted);font-size:12px;text-align:center;padding:20px 0}
+@media(max-width:760px){.two,.cases,.builder{grid-template-columns:1fr}.top{align-items:flex-start}.wrap{padding-bottom:70px}.svgbox svg{min-width:480px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><b>DoS Quest · Lecture 09</b><div class="small">MDOF modelling · mass–spring–damper systems</div></div>
+    <div class="topBtns"><button class="iconBtn" onclick="toggleTheme()">◐ Theme</button><a class="iconBtn" href="../" style="text-decoration:none">← DoS</a></div>
+  </div>
+
+  <section class="hero">
+    <div class="eyebrow">Dynamics of Structures · Lecture 09</div>
+    <h1>From one mass to many.</h1>
+    <p>Build the 3-DOF model one mass at a time: relative spring/damper forces → three scalar equations → mass, damping and stiffness matrices → the four vibration cases.</p>
+    <div class="chips"><span class="chip">3 DOF</span><span class="chip">FBD reasoning</span><span class="chip">[M], [C], [K]</span><span class="chip">Free / Forced</span><span class="chip">Damped / Undamped</span></div>
+  </section>
+
+  <nav class="nav">
+    <a href="#model">1 · Model</a><a href="#fbd">2 · FBD</a><a href="#equations">3 · Equations</a><a href="#matrix">4 · Matrices</a><a href="#cases">5 · Four cases</a><a href="#builder">6 · Try values</a><a href="#check">7 · Quick check</a>
+  </nav>
+
+  <section class="card" id="model">
+    <h2>1. Physical model → 3 degrees of freedom</h2>
+    <p class="small">The handwritten notes model a multi-storey building as three lumped masses connected by springs and dampers. The lateral floor motions are <b>u₁, u₂, u₃</b>.</p>
+    <div class="two">
+      <div class="svgbox">
+        <svg viewBox="0 0 760 330" role="img" aria-label="Three degree of freedom mass spring damper model">
+          <defs><marker id="arr" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#62a8ff"/></marker></defs>
+          <line x1="55" y1="45" x2="55" y2="285" stroke="#8aa3bf" stroke-width="6"/>
+          <rect x="180" y="210" width="115" height="75" rx="8" fill="#183759" stroke="#8ec3ff"/><text x="237" y="252" text-anchor="middle" fill="white" font-size="24">m₁</text>
+          <rect x="405" y="130" width="115" height="75" rx="8" fill="#183759" stroke="#8ec3ff"/><text x="462" y="172" text-anchor="middle" fill="white" font-size="24">m₂</text>
+          <rect x="625" y="50" width="100" height="75" rx="8" fill="#183759" stroke="#8ec3ff"/><text x="675" y="92" text-anchor="middle" fill="white" font-size="24">m₃</text>
+          <path d="M55 230 l20 -12 20 24 20 -24 20 24 20 -12 25 0" fill="none" stroke="#ffc857" stroke-width="4"/><text x="115" y="208" fill="#ffc857">k₁</text>
+          <path d="M295 230 l18 -12 18 24 18 -24 18 24 18 -12 20 0" fill="none" stroke="#ffc857" stroke-width="4"/><text x="345" y="208" fill="#ffc857">k₂</text>
+          <path d="M520 150 l18 -12 18 24 18 -24 18 24 18 -12 15 0" fill="none" stroke="#ffc857" stroke-width="4"/><text x="570" y="128" fill="#ffc857">k₃</text>
+          <line x1="55" y1="268" x2="180" y2="268" stroke="#5dd39e" stroke-width="3"/><rect x="100" y="256" width="35" height="24" fill="#07101f" stroke="#5dd39e"/><text x="108" y="250" fill="#5dd39e">c₁</text>
+          <line x1="295" y1="268" x2="405" y2="188" stroke="#5dd39e" stroke-width="3"/><rect x="340" y="215" width="35" height="24" fill="#07101f" stroke="#5dd39e"/><text x="342" y="206" fill="#5dd39e">c₂</text>
+          <line x1="520" y1="188" x2="625" y2="108" stroke="#5dd39e" stroke-width="3"/><rect x="565" y="135" width="35" height="24" fill="#07101f" stroke="#5dd39e"/><text x="568" y="126" fill="#5dd39e">c₃</text>
+          <line x1="220" y1="300" x2="315" y2="300" stroke="#62a8ff" stroke-width="3" marker-end="url(#arr)"/><text x="254" y="325" fill="#8ec3ff">u₁</text>
+          <line x1="440" y1="220" x2="535" y2="220" stroke="#62a8ff" stroke-width="3" marker-end="url(#arr)"/><text x="474" y="244" fill="#8ec3ff">u₂</text>
+          <line x1="650" y1="140" x2="742" y2="140" stroke="#62a8ff" stroke-width="3" marker-end="url(#arr)"/><text x="686" y="164" fill="#8ec3ff">u₃</text>
+        </svg>
+      </div>
+      <div>
+        <div class="note"><b>Core idea:</b> each mass moves independently, so a 3-mass model needs three displacement coordinates: <b>u₁, u₂, u₃</b>.</div>
+        <div class="eq">{u} = [ u₁ &nbsp; u₂ &nbsp; u₃ ]ᵀ</div>
+        <p>The mass model is <b>lumped</b>: each floor mass is concentrated at one coordinate. Springs represent storey stiffness; dashpots represent damping.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="card" id="fbd">
+    <h2>2. Free-body reasoning: relative motion matters</h2>
+    <p>A spring or damper between two masses reacts to the <b>difference</b> in their motion. That is the key to every off-diagonal term later.</p>
+    <div class="eq">Spring between 1 and 2: &nbsp; k₂(u₂ − u₁)<br>Damper between 1 and 2: &nbsp; c₂(u̇₂ − u̇₁)</div>
+    <div class="stepper" data-stepper="fbd">
+      <div class="step show"><span class="n">1</span><b>Mass m₁:</b> it is connected to ground by k₁,c₁ and to m₂ by k₂,c₂.</div>
+      <div class="step"><span class="n">2</span><b>Mass m₂:</b> it feels interaction from both sides: the 1–2 pair and the 2–3 pair.</div>
+      <div class="step"><span class="n">3</span><b>Mass m₃:</b> it only interacts with m₂ through k₃,c₃.</div>
+      <button class="primary" onclick="nextLocal('fbd')">Reveal next reasoning step</button>
+    </div>
+  </section>
+
+  <section class="card" id="equations">
+    <h2>3. Write one equilibrium equation for each mass</h2>
+    <p class="small">The following is the cleaned algebraic form of the three handwritten mass equations.</p>
+    <div class="stepper" data-stepper="eqs">
+      <div class="step show"><span class="n">1</span><b>Mass 1</b><div class="eq">m₁ü₁ + c₁u̇₁ + k₁u₁ + c₂(u̇₁−u̇₂) + k₂(u₁−u₂) = F₁(t)</div></div>
+      <div class="step"><span class="n">2</span><b>Collect coefficients for mass 1</b><div class="eq">m₁ü₁ + (c₁+c₂)u̇₁ − c₂u̇₂ + (k₁+k₂)u₁ − k₂u₂ = F₁(t)</div></div>
+      <div class="step"><span class="n">3</span><b>Mass 2</b><div class="eq">m₂ü₂ + c₂(u̇₂−u̇₁) + k₂(u₂−u₁) + c₃(u̇₂−u̇₃) + k₃(u₂−u₃) = F₂(t)</div></div>
+      <div class="step"><span class="n">4</span><b>Mass 3</b><div class="eq">m₃ü₃ + c₃(u̇₃−u̇₂) + k₃(u₃−u₂) = F₃(t)</div></div>
+      <button class="primary" onclick="nextLocal('eqs')">Reveal next equation</button>
+    </div>
+    <div class="note"><b>Practical reading:</b> diagonal terms collect everything attached to that mass; off-diagonal terms are the negative coupling to a neighbouring mass.</div>
+  </section>
+
+  <section class="card" id="matrix">
+    <h2>4. Assemble the matrix equation</h2>
+    <div class="eq"><b>[M]{ü} + [C]{u̇} + [K]{u} = {F(t)}</b></div>
+    <div class="matrixWrap">
+      <h3>Mass matrix [M]</h3>
+      <span class="matrixBox"><table class="matrix"><tr><td>m₁</td><td>0</td><td>0</td></tr><tr><td>0</td><td>m₂</td><td>0</td></tr><tr><td>0</td><td>0</td><td>m₃</td></tr></table></span>
+      <h3>Damping matrix [C]</h3>
+      <span class="matrixBox"><table class="matrix"><tr><td>c₁+c₂</td><td>−c₂</td><td>0</td></tr><tr><td>−c₂</td><td>c₂+c₃</td><td>−c₃</td></tr><tr><td>0</td><td>−c₃</td><td>c₃</td></tr></table></span>
+      <h3>Stiffness matrix [K]</h3>
+      <span class="matrixBox"><table class="matrix"><tr><td>k₁+k₂</td><td>−k₂</td><td>0</td></tr><tr><td>−k₂</td><td>k₂+k₃</td><td>−k₃</td></tr><tr><td>0</td><td>−k₃</td><td>k₃</td></tr></table></span>
+      <h3>Vectors</h3>
+      <div class="eq">{u} = [u₁ u₂ u₃]ᵀ &nbsp;&nbsp; {u̇} = [u̇₁ u̇₂ u̇₃]ᵀ &nbsp;&nbsp; {ü} = [ü₁ ü₂ ü₃]ᵀ<br>{F(t)} = [F₁(t) F₂(t) F₃(t)]ᵀ</div>
+    </div>
+    <div class="note"><b>Memory pattern:</b> diagonal = “sum of elements touching this DOF”; neighbour coupling = negative connector value; no direct connection = 0.</div>
+  </section>
+
+  <section class="card" id="cases">
+    <h2>5. The four vibration cases from Lecture 09</h2>
+    <p>Tap a case. The general MDOF equation is simplified by switching damping and external force on/off.</p>
+    <div class="cases" id="caseGrid">
+      <div class="case on" onclick="setCase(0,this)"><b>① Undamped free vibration</b><div class="small">C = 0 and F(t) = 0</div><div class="eq">[M]{ü} + [K]{u} = 0</div></div>
+      <div class="case" onclick="setCase(1,this)"><b>② Damped free vibration</b><div class="small">F(t) = 0</div><div class="eq">[M]{ü} + [C]{u̇} + [K]{u} = 0</div></div>
+      <div class="case" onclick="setCase(2,this)"><b>③ Undamped forced vibration</b><div class="small">C = 0</div><div class="eq">[M]{ü} + [K]{u} = {F(t)}</div></div>
+      <div class="case" onclick="setCase(3,this)"><b>④ Damped forced vibration</b><div class="small">Nothing removed</div><div class="eq">[M]{ü} + [C]{u̇} + [K]{u} = {F(t)}</div></div>
+    </div>
+    <div id="caseExplain" class="note" style="margin-top:10px">No damping and no continuing external load. Motion continues because of the initial disturbance and the interaction of mass and stiffness.</div>
+  </section>
+
+  <section class="card" id="builder">
+    <h2>6. Matrix builder — try your own values</h2>
+    <p class="small">This calculator uses exactly the 3-DOF matrix pattern above. Values are only for practice.</p>
+    <div class="builder">
+      <div class="group"><b>Masses</b><label>m₁ <input id="m1" type="number" value="10" step="any"></label><label>m₂ <input id="m2" type="number" value="12" step="any"></label><label>m₃ <input id="m3" type="number" value="8" step="any"></label></div>
+      <div class="group"><b>Dampers</b><label>c₁ <input id="c1" type="number" value="2" step="any"></label><label>c₂ <input id="c2" type="number" value="3" step="any"></label><label>c₃ <input id="c3" type="number" value="4" step="any"></label></div>
+      <div class="group"><b>Springs</b><label>k₁ <input id="k1" type="number" value="100" step="any"></label><label>k₂ <input id="k2" type="number" value="150" step="any"></label><label>k₃ <input id="k3" type="number" value="200" step="any"></label></div>
+    </div>
+    <button class="primary" style="margin-top:10px" onclick="buildMatrices()">Build numeric matrices</button>
+    <div id="numericMatrices" class="matrixWrap"></div>
+  </section>
+
+  <section class="card" id="check">
+    <h2>7. Quick knowledge check</h2>
+    <div class="quizQ"><b>Q1. Why does k₂ appear as −k₂ in positions (1,2) and (2,1) of [K]?</b><button class="choice" onclick="judge(this,1,'q1')">Because k₂ couples the relative displacement of DOF 1 and 2</button><button class="choice" onclick="judge(this,0,'q1')">Because stiffness is always negative</button><button class="choice" onclick="judge(this,0,'q1')">Because m₂ is negative</button><div class="reveal" id="q1">The connector force depends on u₁−u₂ or u₂−u₁. When coefficients are collected, the neighbour displacement enters with a negative sign.</div></div>
+    <div class="quizQ"><b>Q2. Which case gives [M]{ü} + [K]{u} = 0?</b><button class="choice" onclick="judge(this,0,'q2')">Damped forced vibration</button><button class="choice" onclick="judge(this,1,'q2')">Undamped free vibration</button><button class="choice" onclick="judge(this,0,'q2')">Damped free vibration</button><div class="reveal" id="q2">Free means {F(t)} = 0. Undamped means [C] = 0. Both disappear, leaving [M]{ü} + [K]{u} = 0.</div></div>
+    <div class="quizQ"><b>Q3. What sits on the diagonal K₂₂?</b><button class="choice" onclick="judge(this,0,'q3')">k₂ only</button><button class="choice" onclick="judge(this,1,'q3')">k₂ + k₃</button><button class="choice" onclick="judge(this,0,'q3')">−k₂ − k₃</button><div class="reveal" id="q3">Mass 2 is connected to spring k₂ on one side and k₃ on the other. The diagonal collects both: k₂+k₃.</div></div>
+  </section>
+
+  <div class="footer">Lecture 09 interactive · built from the uploaded handwritten class notes · progress is not tracked on this page.</div>
+</div>
+<script>
+function toggleTheme(){const root=document.documentElement;const light=root.getAttribute('data-theme')==='light';root.setAttribute('data-theme',light?'dark':'light');localStorage.setItem('dos-l09-theme',light?'dark':'light')}
+(function(){const t=localStorage.getItem('dos-l09-theme');if(t)document.documentElement.setAttribute('data-theme',t)})();
+const stepState={};
+function nextLocal(id){const host=document.querySelector(`[data-stepper="${id}"]`);const steps=[...host.querySelectorAll('.step')];stepState[id]=(stepState[id]||0)+1;if(stepState[id]>=steps.length){stepState[id]=0;steps.forEach((s,i)=>s.classList.toggle('show',i===0));host.querySelector('button').textContent='Reveal next reasoning step';return}steps[stepState[id]].classList.add('show');if(stepState[id]===steps.length-1)host.querySelector('button').textContent='Restart steps'}
+const caseText=[
+  'No damping and no continuing external load. Motion continues because of the initial disturbance and the interaction of mass and stiffness.',
+  'No continuing external load, but damping remains. The motion is free vibration with energy dissipation.',
+  'An external force vector drives the system, but the damping matrix is neglected.',
+  'The complete model is active: inertia, damping, stiffness and time-varying external forces all participate.'
+];
+function setCase(i,el){document.querySelectorAll('.case').forEach(x=>x.classList.remove('on'));el.classList.add('on');document.getElementById('caseExplain').textContent=caseText[i]}
+function v(id){return Number(document.getElementById(id).value)||0}
+function matrixHTML(A){return `<span class="matrixBox"><table class="matrix">${A.map(r=>'<tr>'+r.map(x=>`<td>${x}</td>`).join('')+'</tr>').join('')}</table></span>`}
+function buildMatrices(){const m1=v('m1'),m2=v('m2'),m3=v('m3'),c1=v('c1'),c2=v('c2'),c3=v('c3'),k1=v('k1'),k2=v('k2'),k3=v('k3');const M=[[m1,0,0],[0,m2,0],[0,0,m3]],C=[[c1+c2,-c2,0],[-c2,c2+c3,-c3],[0,-c3,c3]],K=[[k1+k2,-k2,0],[-k2,k2+k3,-k3],[0,-k3,k3]];document.getElementById('numericMatrices').innerHTML=`<h3>[M]</h3>${matrixHTML(M)}<h3>[C]</h3>${matrixHTML(C)}<h3>[K]</h3>${matrixHTML(K)}`}
+function judge(btn,ok,id){const parent=btn.parentElement;if(parent.dataset.locked)return;if(ok){btn.classList.add('good');parent.dataset.locked='1';[...parent.querySelectorAll('.choice')].forEach(x=>x.disabled=true);document.getElementById(id).style.display='block'}else{btn.classList.add('bad');btn.disabled=true}}
+buildMatrices();
+</script>
+</body>
+</html>
