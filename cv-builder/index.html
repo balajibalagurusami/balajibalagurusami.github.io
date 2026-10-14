@@ -43,7 +43,7 @@ const period=x=>x.start?[x.start,x.end||'Present'].join(' to '):(x.period||'');
 const key='cv-template-builder-v1';
 const blank=()=>({template:'cowi',name:'',role:'',team:'',years:'',suitability:'',relevance:'',memberships:'',qualifications:'',certifications:'',practice:'',projectRole:'',email:'',work:[],education:[],projects:[]});
 let data=blank(),tab='profile';try{const v=JSON.parse(localStorage.getItem(key)||'null');if(v)data=cleanCVData(v,false);}catch(e){}
-const approvedEmail=v=>/^[^\\s@]+@(?:cowi\\.com|(?:[a-z0-9-]+\\.)*arcadis\\.com|(?:[a-z0-9-]+\\.)*setec\\.fr|(?:[a-z0-9-]+\\.)*setec\\.com)$/i.test(String(v||'').trim());
+const approvedEmail=v=>/^[^\s@]+@(?:cowi\.com|(?:[a-z0-9-]+\.)*arcadis\.com|(?:[a-z0-9-]+\.)*setec\.fr|(?:[a-z0-9-]+\.)*setec\.com)$/i.test(String(v||'').trim());
 function promptApprovedEmail(original=''){
  let proposed=String(original||'').trim();
  if(approvedEmail(proposed))return proposed;
