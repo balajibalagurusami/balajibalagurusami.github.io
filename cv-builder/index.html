@@ -96,8 +96,37 @@ function paginateCV(){
   }else if(node.children.length){for(const child of Array.from(node.children))put(child,heading)}
   else column.append(clone);
  }
+ // Reserve the first page for the two role-specific narrative sections.
+ // Add these before work history, regardless of the amount of subsequent experience.
+ if(cowi){
+  const firstPageSections=contentNodes.filter(section=>/^(Suitability to the role|Relevance of experience)$/i.test(section.querySelector('h3')?.textContent?.trim()||''));
+  for(const section of firstPageSections){
+   column.append(section.cloneNode(true));
+  }
+  // Reduce paragraph spacing and type only if necessary to keep both narratives on page 1.
+  if(!fits()){
+   const firstColumn=column;
+   for(let size=12.5;size>=9&&!fits();size-=0.5){
+    firstColumn.style.fontSize=size+'px';
+    firstColumn.style.lineHeight='1.32';
+    firstColumn.querySelectorAll('p').forEach(p=>p.style.margin='3px 0 6px');
+    firstColumn.querySelectorAll('h3').forEach(h=>h.style.margin='12px 0 6px');
+   }
+   // Very long narratives remain intact in the flow rather than getting clipped.
+   if(!fits()){
+    firstColumn.querySelectorAll('section').forEach(section=>section.remove());
+    firstColumn.removeAttribute('style');
+    for(const section of firstPageSections){
+     const heading=section.querySelector('h3');
+     if(heading){const title=heading.cloneNode(true);column.append(title)}
+     for(const child of Array.from(section.children).filter(n=>n!==heading))put(child,heading);
+    }
+   }
+  }
+ }
  for(const section of contentNodes){
   const h=section.querySelector('h3');if(!h)continue;
+  if(cowi&&/^(Suitability to the role|Relevance of experience)$/i.test(h.textContent.trim()))continue;
   const title=document.createElement('h3');title.textContent=h.textContent;
   if(column.children.length&&column.scrollHeight>column.clientHeight-60)newColumn();
   column.append(title);if(!fits()){title.remove();newColumn();column.append(title)}
