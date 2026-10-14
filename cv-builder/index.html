@@ -31,13 +31,13 @@
 .sheet.page.cowi .page-column.continued{padding-top:1.22in;height:calc(100% - 1.22in)}
 @media print{.sheet.page.cowi::after{-webkit-print-color-adjust:exact;print-color-adjust:exact}.sheet.page.cowi>.page-banner{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 .work-gap-check{border:1px solid #e9a36b;background:#fff8f0;border-radius:9px;padding:13px 15px;margin:12px 0 18px;color:#713800;font-size:13px}.work-gap-check strong{display:block;margin-bottom:5px}.work-gap-check ul{margin:6px 0;padding-left:19px}.work-gap-check.ok{background:#f1f8f3;border-color:#8fbea0;color:#245b37}.work-gap-check.info{background:#f0f6fb;border-color:#a6c7df;color:#31536d}
-</style></head><body>
-<header><div><b>CV Template Builder</b><small>Structured CV entry, template selection and downloadable outputs</small></div><div class="toolbar"><button onclick="saveDraft()">Save draft</button><button class="secondary" onclick="downloadJSON()">Export data</button><label class="filebtn">Import data<input type="file" accept=".json,application/json" hidden onchange="importJSON(event)"></label></div></header>
+.hidden{display:none!important}</style></head><body><div id="cv-extract-overlay" class="hidden" style="position:fixed;inset:0;z-index:1000;background:#152d44a8;display:flex;align-items:center;justify-content:center;padding:12px"><div style="background:white;border-radius:12px;padding:20px;width:min(740px,100%);max-height:90vh;overflow:auto"><h2>Review extracted CV JSON</h2><p class="hint">Local text extraction is approximate. Check and edit every field before using. Scanned PDFs need OCR.</p><textarea id="cv-extract-json" spellcheck="false" style="height:360px;font:12px monospace"></textarea><div class="toolbar" style="margin-top:12px"><button onclick="applyCVExtract()">Use in CV Builder</button><button class="secondary" onclick="downloadCVExtract()">Download JSON</button><button class="secondary" onclick="closeCVExtract()">Cancel</button></div></div></div>
+<header><div><b>CV Template Builder</b><small>Structured CV entry, template selection and downloadable outputs</small></div><div class="toolbar"><button onclick="saveDraft()">Save draft</button><button class="secondary" onclick="downloadJSON()">Export data</button><label class="filebtn">Extract PDF/DOCX → JSON<input type="file" accept=".pdf,.docx" hidden onchange="extractCVFile(event)"></label><label class="filebtn">Import data<input type="file" accept=".json,application/json" hidden onchange="importJSON(event)"></label></div></header>
 <div class="wrap"><section class="panel editor"><h2>Candidate information</h2><p class="hint">Fields save locally in this browser when you press Save draft. Use Export data to transfer a CV to another device.</p>
 <div class="formgrid"><label class="field wide">CV template<select id="template" onchange="changeTemplate(this.value)"><option value="cowi">COWI-style project CV (sample structure)</option><option value="classic">Classic professional CV</option><option value="modern">Modern compact CV</option></select></label></div>
 <div class="tabs" id="tabs"></div><div id="formarea"></div><div class="toolbar" style="margin-top:16px"><button onclick="saveDraft()">Save draft</button><button class="secondary" onclick="downloadJSON()">Download JSON</button><button class="secondary" onclick="clearDraft()">Clear all</button></div></section>
 <section class="panel"><div class="previewTop"><div><h2>Live CV preview</h2><p class="hint" style="margin:3px 0">A4-ready. Browser Print can save directly as PDF.</p></div><div class="toolbar"><button onclick="window.print()">Print / PDF</button><button class="secondary" onclick="exportDocx()">Download DOCX</button></div></div><div class="preview"><article id="sheet" class="sheet"></article></div><p class="footer">The COWI-style option follows the section structure of the uploaded 7-page sample, but is an editable web recreation rather than a pixel-perfect reproduction of its Word formatting. Data remains in your browser unless you export it. Do not store confidential CVs in public GitHub repositories.</p></section></div>
-<script src="https://cdn.jsdelivr.net/npm/docx@9.5.1/dist/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.9.0/mammoth.browser.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script src="https://cdn.jsdelivr.net/npm/docx@9.5.1/dist/index.umd.js"></script>
 <script>
 const period=x=>x.start?[x.start,x.end||'Present'].join(' to '):(x.period||'');
 const key='cv-template-builder-v1';
@@ -84,6 +84,52 @@ function refreshWorkGapWarning(){
  if(report.alerts.length){el.className='work-gap-check';el.innerHTML='<strong>⚠ Check work history dates</strong><ul>'+report.alerts.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul><small>Overlapping or consecutive employment months count as continuous. Leave the end month blank for a current role.</small>';return}
  el.className='work-gap-check ok';el.innerHTML='<strong>✓ No gaps detected</strong>All '+report.checked+' dated work-history entries form a continuous timeline.';
 }
+
+function previewCVJSON(){return document.getElementById('cv-extract-json')}
+function extractSectionJSON(text){
+ const x=blank(), lines=text.replace(/\r/g,'').split(/\n+/).map(a=>a.trim()).filter(Boolean),heads=[
+ ['suitability',/^(suitability to the role|professional summary|summary|profile)$/i],
+ ['relevance',/^(relevance of experience|relevant experience)$/i],
+ ['memberships',/^professional memberships?$/i],['qualifications',/^qualifications?$/i],
+ ['certifications',/^certifications?$/i],['practice',/^(areas of practice|skills)$/i],
+ ['work',/^(work history|employment history|work experience)$/i],
+ ['education',/^education$/i],['projects',/^(project experience|projects)$/i]];
+ let section='intro';const buckets={intro:[]};
+ for(const line of lines){const heading=heads.find(a=>a[1].test(line));if(heading){section=heading[0];buckets[section]??=[]}else{buckets[section]??=[];buckets[section].push(line)}}
+ x.name=(buckets.intro||[]).find(a=>/^[A-Za-z][A-Za-z .'-]{3,60}$/.test(a)&&!/^(cv|resume|curriculum vitae)$/i.test(a))||'';
+ x.role=(buckets.intro||[]).slice((buckets.intro||[]).indexOf(x.name)+1).find(a=>a.length<80)||'';
+ x.email=(text.match(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/)||[])[0]||'';
+ const years=text.match(/(\d{1,2})\s*years?\s*(?:of\s*)?experience/i);if(years)x.years=years[1];
+ for(const k of ['suitability','relevance','memberships','qualifications','certifications','practice'])x[k]=(buckets[k]||[]).join('\n');
+ const months=row=>{const all=row.match(/(?:19|20)\d{2}(?:[-/.](?:0?[1-9]|1[0-2]))?/g)||[];const normalize=a=>a.length===4?a+'-01':a.replace(/[/.]/g,'-').replace(/-(\d)$/,'-0$1');return {start:all[0]?normalize(all[0]):'',end:all[1]?normalize(all[1]):''}};
+ x.work=(buckets.work||[]).map(a=>({...months(a),employer:a,position:'',description:''}));
+ x.education=(buckets.education||[]).map(a=>({...months(a),institution:a,qualification:'',description:''}));
+ x.projects=(buckets.projects||[]).map(a=>({...months(a),title:a,role:'',software:'',description:''}));
+ x._extractionNote='Best-effort local text extraction. Please review all entries and dates. Scanned PDFs require OCR.';
+ return x;
+}
+async function extractCVFile(e){
+ const file=e.target.files?.[0];e.target.value='';if(!file)return;
+ try{
+ let txt='';
+ if(/\.docx$/i.test(file.name)){
+  if(!window.mammoth)throw Error('DOCX reading library unavailable. Check internet/CDN access.');
+  txt=(await mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()})).value;
+ }else if(/\.pdf$/i.test(file.name)){
+  if(!window.pdfjsLib)throw Error('PDF reading library unavailable. Check internet/CDN access.');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const pdf=await pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
+  const pages=[];for(let n=1;n<=pdf.numPages;n++){const p=await pdf.getPage(n),c=await p.getTextContent();pages.push(c.items.map(i=>i.str).join('\n'))}txt=pages.join('\n');
+ }else throw Error('Only PDF and DOCX files are supported.');
+ if(txt.trim().length<40)throw Error('No selectable text found. Scanned PDFs need OCR.');
+ previewCVJSON().value=JSON.stringify(extractSectionJSON(txt),null,2);
+ document.getElementById('cv-extract-overlay').classList.remove('hidden');
+ }catch(error){alert('CV extraction failed: '+error.message)}
+}
+function closeCVExtract(){document.getElementById('cv-extract-overlay').classList.add('hidden')}
+function reviewedCV(){const d=JSON.parse(previewCVJSON().value);if(!d||!['work','education','projects'].every(k=>Array.isArray(d[k])))throw Error('Expected arrays: work, education, projects');return {...blank(),...d}}
+function downloadCVExtract(){try{const d=reviewedCV();downloadFile('extracted-cv.json',JSON.stringify(d,null,2),'application/json')}catch(e){alert(e.message)}}
+function applyCVExtract(){try{const d=reviewedCV();if(!confirm('Replace current form data with extracted CV? Save your existing JSON first if you wish to keep it.'))return;data=d;showTab('profile');render();localStorage.setItem(key,JSON.stringify(data));closeCVExtract()}catch(e){alert(e.message)}}
 function entryHTML(type,x,i){return '<div class="entry"><div class="entry-head"><strong>Entry '+(i+1)+'</strong><div><button class="secondary" onclick="moveEntry('+i+',-1)">↑</button> <button class="secondary" onclick="moveEntry('+i+',1)">↓</button> <button class="danger" onclick="removeEntry('+i+')">Remove</button></div></div><div class="formgrid">'+schemas[type].map(([id,label,kind])=>'<label class="field '+(kind==='textarea'?'wide':'')+'">'+label+(kind==='textarea'?'<textarea data-row="'+i+'" data-prop="'+id+'">'+esc(x[id])+'</textarea>':'<input type="'+(kind==='month'?'month':'text')+'" data-row="'+i+'" data-prop="'+id+'" value="'+esc(x[id])+'">')+'</label>').join('')+'</div></div>'}
 function addEntry(){data[tab].push(Object.fromEntries(schemas[tab].map(([k])=>[k,''])));showTab(tab);render()}function removeEntry(i){data[tab].splice(i,1);showTab(tab);render()}function moveEntry(i,n){let j=i+n;if(j<0||j>=data[tab].length)return;[data[tab][i],data[tab][j]]=[data[tab][j],data[tab][i]];showTab(tab);render()}
 function changeTemplate(v){data.template=v;render()}function block(title,content){return content?'<section><h3>'+title+'</h3>'+content+'</section>':''}
