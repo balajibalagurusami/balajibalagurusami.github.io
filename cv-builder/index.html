@@ -2,6 +2,21 @@
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CV Template Builder</title>
 <style>
 :root{font-family:Inter,Segoe UI,Arial,sans-serif;color:#172d3e;background:#eef3f6}*{box-sizing:border-box}body{margin:0}header{background:#092d43;color:white;padding:18px 26px;display:flex;justify-content:space-between;align-items:center;gap:12px}header b{font-size:21px}header small{display:block;color:#b6d7e6;margin-top:4px}.wrap{display:grid;grid-template-columns:minmax(360px,1fr) minmax(440px,1.13fr);gap:20px;max-width:1600px;margin:20px auto;padding:0 20px}.panel{background:white;border:1px solid #dce7eb;border-radius:13px;padding:22px;box-shadow:0 4px 18px #1233}.panel h2{margin:0 0 6px;font-size:21px}.hint{font-size:12px;color:#647583;margin:0 0 16px}.toolbar{display:flex;gap:8px;flex-wrap:wrap}button,.filebtn{border:0;background:#176b8e;color:white;border-radius:8px;padding:10px 13px;cursor:pointer;font:600 13px inherit}button.secondary,.filebtn{background:#e7f1f5;color:#12506e}button.danger{background:#fff0f0;color:#a42a2a}.tabs{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0} .tab{background:#ebf1f4;color:#244254} .tab.active{background:#096b88;color:white}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.wide{grid-column:1/-1}label.field{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;color:#344a57}input,textarea,select{font:14px Segoe UI,Arial,sans-serif;padding:10px 11px;border:1px solid #cbd9df;border-radius:7px;background:white;color:#1a3341;width:100%}textarea{min-height:100px;resize:vertical}.entry{border:1px solid #d9e5eb;background:#f8fbfc;border-radius:9px;padding:14px;margin:12px 0}.entry-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.entry-head strong{font-size:14px}.previewTop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.preview{background:#dfe8ec;padding:16px;border-radius:10px;overflow:auto;max-height:calc(100vh - 185px)}.sheet{background:white;min-height:900px;max-width:794px;margin:auto;padding:50px 52px;box-shadow:0 2px 8px #0002;font:13px/1.48 Arial,sans-serif;color:#253845}.sheet h1{font-size:32px;margin:0;color:#0f3b55}.sheet .role{font-weight:700;color:#41758e;margin:4px 0 25px}.sheet h3{text-transform:uppercase;color:#086885;letter-spacing:1px;border-bottom:2px solid #9fc8d7;padding-bottom:5px;margin:23px 0 10px;font-size:14px}.sheet p{margin:5px 0 10px;white-space:pre-wrap}.sheet .meta{color:#637782}.sheet .sidegrid{display:grid;grid-template-columns:31% 1fr;gap:26px}.sheet .left{border-right:1px solid #d9e5eb;padding-right:16px}.sheet .project{break-inside:avoid;margin-bottom:17px}.sheet .project b{display:block}.sheet .workitem{margin-bottom:8px}.sheet.classic h1{color:#1d3648}.sheet.classic h3{color:#153f53;border-color:#c5d4db}.sheet.modern{border-top:12px solid #087a95}.sheet.modern h1{color:#007b94}.muted{color:#657c8b}.footer{font-size:12px;color:#516877;line-height:1.5;margin-top:14px}.hidden{display:none!important}@media(max-width:1050px){.wrap{grid-template-columns:1fr}.preview{max-height:none}}@media(max-width:650px){.wrap{padding:0 9px}.panel{padding:14px}.formgrid{grid-template-columns:1fr}.sheet{padding:26px;min-width:500px}header{padding:15px;flex-wrap:wrap}}@media print{body{background:white}header,.editor,.previewTop,.footer{display:none!important}.wrap{display:block;margin:0;padding:0}.panel{border:0;box-shadow:none;padding:0}.preview{max-height:none;overflow:visible;padding:0;background:white}.sheet{box-shadow:none;max-width:none;width:100%;padding:15mm 13mm;min-height:0}@page{size:A4;margin:0}}
+/* Explicit A4 pages; credential rail only on page one. */
+.preview .sheet{min-height:0;max-width:794px;margin:0 auto 18px}
+.sheet.page{width:210mm;height:297mm;min-height:0;max-width:none;padding:0.5in 0.53in 0.48in;overflow:hidden;position:relative;break-after:page;page-break-after:always}
+.sheet.page:last-child{break-after:auto;page-break-after:auto}
+.sheet.page::before{content:"";position:absolute;top:0;left:0;right:0;border-top:2px solid #315467}
+.sheet.page .page-column{height:100%;overflow:hidden}
+.sheet.page .first-grid{display:grid;grid-template-columns:30% 1fr;gap:24px;height:calc(100% - 112px)}
+.sheet.page .first-grid aside{border-right:1px solid #d9e5eb;padding-right:14px}
+.sheet.page .first-grid main{min-width:0}
+.sheet.page .continued{height:100%}
+.sheet.page .page-column h3{margin-top:0}
+.sheet.page .page-column .project{break-inside:avoid}
+.sheet.page .page-column section{margin:0 0 12px}
+.sheet.page .page-column p{overflow-wrap:anywhere}
+@media print{.preview .sheet{margin:0;box-shadow:none}.sheet.page{width:210mm;height:297mm;padding:0.5in 0.53in 0.48in;box-shadow:none}.sheet.page::before{border-top:2px solid #315467}}
 </style></head><body>
 <header><div><b>CV Template Builder</b><small>Structured CV entry, template selection and downloadable outputs</small></div><div class="toolbar"><button onclick="saveDraft()">Save draft</button><button class="secondary" onclick="downloadJSON()">Export data</button><label class="filebtn">Import data<input type="file" accept=".json,application/json" hidden onchange="importJSON(event)"></label></div></header>
 <div class="wrap"><section class="panel editor"><h2>Candidate information</h2><p class="hint">Fields save locally in this browser when you press Save draft. Use Export data to transfer a CV to another device.</p>
@@ -14,7 +29,7 @@ const key='cv-template-builder-v1';
 const blank=()=>({template:'cowi',name:'',role:'',team:'',years:'',suitability:'',relevance:'',memberships:'',qualifications:'',certifications:'',practice:'',projectRole:'',email:'',phone:'',location:'',work:[],education:[],projects:[]});
 let data=blank(),tab='profile';try{const v=JSON.parse(localStorage.getItem(key)||'null');if(v)data={...blank(),...v};}catch(e){}
 const sections=[['profile','Profile'],['summary','Suitability'],['credentials','Credentials'],['work','Work history'],['education','Education'],['projects','Projects']];
-const schemas={work:[['period','Period / dates'],['employer','Employer'],['position','Job title'],['description','Additional details','textarea']],education:[['period','Period / dates'],['institution','Institution'],['qualification','Qualification'],['description','Notes','textarea']],projects:[['period','Period / dates'],['title','Project name'],['role','Role on project'],['description','Project description and responsibilities','textarea']]};
+const schemas={work:[['start','Start (YYYY-MM)','month'],['end','End (YYYY-MM)','month'],['employer','Employer'],['position','Job title'],['description','Additional details','textarea']],education:[['start','Start (YYYY-MM)','month'],['end','End (YYYY-MM)','month'],['institution','Institution'],['qualification','Qualification'],['description','Notes','textarea']],projects:[['start','Start (YYYY-MM)','month'],['end','End (YYYY-MM)','month'],['title','Project name'],['role','Role on project'],['software','Software used (comma-separated)'],['description','Project description and responsibilities','textarea']]};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fld=(id,label,kind='text',wide=false)=>'<label class="field '+(wide?'wide':'')+'">'+label+(kind==='textarea'?'<textarea data-field="'+id+'">'+esc(data[id])+'</textarea>':'<input type="text" data-field="'+id+'" value="'+esc(data[id])+'">')+'</label>';
 function showTab(t){tab=t;document.getElementById('tabs').innerHTML=sections.map(([k,v])=>'<button class="tab '+(t===k?'active':'')+'" onclick="showTab(\''+k+'\')">'+v+'</button>').join('');let html='';
@@ -23,24 +38,72 @@ if(t==='summary')html='<div class="formgrid">'+fld('suitability','Suitability to
 if(t==='credentials')html='<div class="formgrid">'+fld('memberships','Professional memberships (one per line)','textarea',true)+fld('qualifications','Qualifications (one per line)','textarea',true)+fld('certifications','Certifications (one per line)','textarea',true)+fld('practice','Areas of practice (one per line)','textarea',true)+'</div>';
 if(schemas[t])html='<p class="hint">Add as many entries as required. Project descriptions support multiple lines.</p><div id="entries">'+data[t].map((x,i)=>entryHTML(t,x,i)).join('')+'</div><button onclick="addEntry()">+ Add '+(t==='work'?'employment':t==='education'?'qualification':'project')+'</button>';
 document.getElementById('formarea').innerHTML=html;document.querySelectorAll('[data-field]').forEach(el=>el.addEventListener('input',e=>{data[e.target.dataset.field]=e.target.value;render()}));document.querySelectorAll('[data-row]').forEach(el=>el.addEventListener('input',e=>{data[tab][Number(e.target.dataset.row)][e.target.dataset.prop]=e.target.value;render()}));}
-function entryHTML(type,x,i){return '<div class="entry"><div class="entry-head"><strong>Entry '+(i+1)+'</strong><div><button class="secondary" onclick="moveEntry('+i+',-1)">↑</button> <button class="secondary" onclick="moveEntry('+i+',1)">↓</button> <button class="danger" onclick="removeEntry('+i+')">Remove</button></div></div><div class="formgrid">'+schemas[type].map(([id,label,kind])=>'<label class="field '+(kind==='textarea'?'wide':'')+'">'+label+(kind==='textarea'?'<textarea data-row="'+i+'" data-prop="'+id+'">'+esc(x[id])+'</textarea>':'<input data-row="'+i+'" data-prop="'+id+'" value="'+esc(x[id])+'">')+'</label>').join('')+'</div></div>'}
+function entryHTML(type,x,i){return '<div class="entry"><div class="entry-head"><strong>Entry '+(i+1)+'</strong><div><button class="secondary" onclick="moveEntry('+i+',-1)">↑</button> <button class="secondary" onclick="moveEntry('+i+',1)">↓</button> <button class="danger" onclick="removeEntry('+i+')">Remove</button></div></div><div class="formgrid">'+schemas[type].map(([id,label,kind])=>'<label class="field '+(kind==='textarea'?'wide':'')+'">'+label+(kind==='textarea'?'<textarea data-row="'+i+'" data-prop="'+id+'">'+esc(x[id])+'</textarea>':'<input type="'+(kind==='month'?'month':'text')+'" data-row="'+i+'" data-prop="'+id+'" value="'+esc(x[id])+'">')+'</label>').join('')+'</div></div>'}
 function addEntry(){data[tab].push(Object.fromEntries(schemas[tab].map(([k])=>[k,''])));showTab(tab);render()}function removeEntry(i){data[tab].splice(i,1);showTab(tab);render()}function moveEntry(i,n){let j=i+n;if(j<0||j>=data[tab].length)return;[data[tab][i],data[tab][j]]=[data[tab][j],data[tab][i]];showTab(tab);render()}
 function changeTemplate(v){data.template=v;render()}function block(title,content){return content?'<section><h3>'+title+'</h3>'+content+'</section>':''}
 function lines(s){return esc(s).split('\n').filter(x=>x.trim()).map(x=>'<p>'+x+'</p>').join('')}
-function render(){document.getElementById('template').value=data.template;const work=data.work.map(x=>'<div class="workitem"><b>'+esc([x.period,x.employer,x.position].filter(Boolean).join(' | '))+'</b><p>'+esc(x.description)+'</p></div>').join('');
-const education=data.education.map(x=>'<div class="workitem"><b>'+esc([x.period,x.institution,x.qualification].filter(Boolean).join(' | '))+'</b><p>'+esc(x.description)+'</p></div>').join('');
-const projects=data.projects.map(x=>'<div class="project"><b>'+esc([x.period,x.title].filter(Boolean).join(' — '))+'</b><span class="meta">'+esc(x.role)+'</span><p>'+esc(x.description)+'</p></div>').join('');
+function render(){document.getElementById('template').value=data.template;const period=x=>[x.start,x.end||'Present'].filter(Boolean).join(' to ')||(x.period||'');const work=data.work.map(x=>'<div class="workitem"><b>'+esc([period(x),x.employer,x.position].filter(Boolean).join(' | '))+'</b><p>'+esc(x.description)+'</p></div>').join('');
+const education=data.education.map(x=>'<div class="workitem"><b>'+esc([period(x),x.institution,x.qualification].filter(Boolean).join(' | '))+'</b><p>'+esc(x.description)+'</p></div>').join('');
+const projects=data.projects.map(x=>'<div class="project"><b>'+esc([period(x),x.title].filter(Boolean).join(' — '))+'</b><span class="meta">'+esc(x.role)+'</span>'+(x.software?'<p><b>Software: </b>'+esc(x.software)+'</p>':'')+'<p>'+esc(x.description)+'</p></div>').join('');
 const summary=block('Suitability to the role',data.suitability?'<p>'+esc(data.suitability)+'</p>':'')+block('Relevance of experience',data.relevance?'<p>'+esc(data.relevance)+'</p>':'');
 const credentials=block('Professional memberships',lines(data.memberships))+block('Qualifications',lines(data.qualifications))+block('Certifications',lines(data.certifications))+block('Areas of practice',lines(data.practice))+block('Role on this project',data.projectRole?'<p>'+esc(data.projectRole)+'</p>':'');
 const identity='<h1>'+esc(data.name||'Candidate name')+'</h1><div class="role">'+esc(data.role||'Professional role')+'</div><p class="meta">'+esc([data.location,data.email,data.phone].filter(Boolean).join('  •  '))+'</p>';
 const years=data.years?'<p><b>'+esc(data.years)+'</b> years of experience</p>':'';
 const history=block('Work history',work)+block('Education',education)+block('Project experience',projects);
 let body=data.template==='cowi'?identity+'<div class="sidegrid"><aside class="left">'+years+credentials+'</aside><main>'+summary+history+'</main></div>':identity+years+summary+credentials+history;
-const sheet=document.getElementById('sheet');sheet.className='sheet '+(data.template==='cowi'?'cowi':data.template);sheet.innerHTML=body;}
+const sheet=document.getElementById('sheet');sheet.className='sheet '+(data.template==='cowi'?'cowi':data.template);sheet.innerHTML=body;paginateCV();}
 function saveDraft(){localStorage.setItem(key,JSON.stringify(data));alert('Draft saved in this browser.')}function clearDraft(){if(!confirm('Clear all CV fields?'))return;data=blank();localStorage.removeItem(key);showTab('profile');render()}
 function downloadFile(name,content,type){let b=new Blob([content],{type});let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function downloadJSON(){downloadFile((data.name||'candidate').replace(/[^\w -]/g,'')+'-cv.json',JSON.stringify(data,null,2),'application/json')}
 async function importJSON(e){let file=e.target.files[0];if(!file)return;try{let next=JSON.parse(await file.text());if(!next||typeof next!=='object'||!Array.isArray(next.projects)||!Array.isArray(next.work)||!Array.isArray(next.education))throw Error('Invalid CV JSON structure');data={...blank(),...next,template:['cowi','classic','modern'].includes(next.template)?next.template:'cowi'};showTab('profile');render();saveDraft()}catch(err){alert('Could not import CV: '+err.message)}e.target.value=''}
-async function exportDocx(){if(!window.docx){alert('DOCX library did not load. Check your internet connection, or use Print / PDF.');return}const D=window.docx;const children=[];const paragraph=(text,bold=false)=>children.push(new D.Paragraph({children:[new D.TextRun({text:String(text||''),bold})],spacing:{after:130}}));const heading=(s)=>children.push(new D.Paragraph({text:s,heading:D.HeadingLevel.HEADING_2,spacing:{before:260,after:110}}));const multi=(s)=>String(s||'').split('\n').filter(Boolean).forEach(x=>paragraph(x));paragraph(data.name||'Candidate name',true);paragraph(data.role||'Professional role');paragraph([data.location,data.email,data.phone].filter(Boolean).join(' | '));if(data.years)paragraph(data.years+' years of experience');[['Suitability to the role',data.suitability],['Relevance of experience',data.relevance],['Professional memberships',data.memberships],['Qualifications',data.qualifications],['Certifications',data.certifications],['Areas of practice',data.practice],['Role on this project',data.projectRole]].forEach(([h,v])=>{if(v){heading(h);multi(v)}});[['Work history',data.work],['Education',data.education],['Project experience',data.projects]].forEach(([h,arr])=>{if(arr.length){heading(h);arr.forEach(x=>{paragraph((h==='Work history'?[x.period,x.employer,x.position]:h==='Education'?[x.period,x.institution,x.qualification]:[x.period,x.title,x.role]).filter(Boolean).join(' | '),true);multi(x.description)})}});const doc=new D.Document({sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:950,right:900,bottom:900,left:900}}},children}]});const blob=await D.Packer.toBlob(doc);let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(data.name||'candidate').replace(/[^\w -]/g,'')+'-cv.docx';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+async function exportDocx(){if(!window.docx){alert('DOCX library did not load. Check your internet connection, or use Print / PDF.');return}const D=window.docx;const children=[];const paragraph=(text,bold=false)=>children.push(new D.Paragraph({children:[new D.TextRun({text:String(text||''),bold})],spacing:{after:130}}));const heading=(s)=>children.push(new D.Paragraph({text:s,heading:D.HeadingLevel.HEADING_2,spacing:{before:260,after:110}}));const multi=(s)=>String(s||'').split('\n').filter(Boolean).forEach(x=>paragraph(x));paragraph(data.name||'Candidate name',true);paragraph(data.role||'Professional role');paragraph([data.location,data.email,data.phone].filter(Boolean).join(' | '));if(data.years)paragraph(data.years+' years of experience');[['Suitability to the role',data.suitability],['Relevance of experience',data.relevance],['Professional memberships',data.memberships],['Qualifications',data.qualifications],['Certifications',data.certifications],['Areas of practice',data.practice],['Role on this project',data.projectRole]].forEach(([h,v])=>{if(v){heading(h);multi(v)}});[['Work history',data.work],['Education',data.education],['Project experience',data.projects]].forEach(([h,arr])=>{if(arr.length){heading(h);arr.forEach(x=>{paragraph((h==='Work history'?[x.period,x.employer,x.position]:h==='Education'?[x.period,x.institution,x.qualification]:[period(x),x.title,x.role]).filter(Boolean).join(' | '),true);if(x.software)paragraph('Software: '+x.software);multi(x.description)})}});const doc=new D.Document({sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:950,right:900,bottom:900,left:900}}},children}]});const blob=await D.Packer.toBlob(doc);let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(data.name||'candidate').replace(/[^\w -]/g,'')+'-cv.docx';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+
+/* Divide CV contents into A4 sized pages, with sidebar on the first page only. */
+function paginateCV(){
+ const root=document.getElementById('sheet'),current=root.cloneNode(true),cowi=data.template==='cowi';
+ const source=cowi?current.querySelector('.sidegrid main'):current;
+ const sidebar=cowi?current.querySelector('.sidegrid aside'):null;
+ const headerNodes=Array.from(current.children).filter(n=>['H1'].includes(n.tagName)||n.classList.contains('role')||n.classList.contains('meta')||(!cowi&&n.tagName==='P'));
+ const contentNodes=Array.from(source.children).filter(n=>n.tagName==='SECTION');
+ root.outerHTML='<div id="sheet" class="pages"></div>';
+ const output=document.getElementById('sheet');
+ function newPage(first){
+  const p=document.createElement('article');p.className='sheet page '+data.template;
+  if(first){
+   const banner=document.createElement('div');banner.className='page-banner';headerNodes.forEach(n=>banner.append(n.cloneNode(true)));p.append(banner);
+   if(cowi){
+    const grid=document.createElement('div');grid.className='first-grid';
+    const side=document.createElement('aside');if(sidebar)Array.from(sidebar.children).forEach(n=>side.append(n.cloneNode(true)));
+    const main=document.createElement('main');main.className='page-column';grid.append(side,main);p.append(grid);output.append(p);return main;
+   }
+  }
+  const col=document.createElement('div');col.className='page-column continued';p.append(col);output.append(p);return col;
+ }
+ let column=newPage(true);
+ const fits=()=>column.scrollHeight<=column.clientHeight+1;
+ const newColumn=()=>{column=newPage(false)};
+ function put(node,heading){
+  const clone=node.cloneNode(true);column.append(clone);
+  if(fits())return;
+  clone.remove();
+  if(column.children.length){newColumn();if(heading)column.append(heading.cloneNode(true))}
+  column.append(clone);
+  if(fits())return;
+  clone.remove();
+  if(node.tagName==='P'){
+   const words=(node.textContent||'').split(/\s+/);let part=document.createElement('p');column.append(part);
+   for(const word of words){const previous=part.textContent;part.textContent=previous?previous+' '+word:word;if(!fits()&&previous){part.textContent=previous;newColumn();if(heading)column.append(heading.cloneNode(true));part=document.createElement('p');part.textContent=word;column.append(part)}}
+  }else if(node.children.length){for(const child of Array.from(node.children))put(child,heading)}
+  else column.append(clone);
+ }
+ for(const section of contentNodes){
+  const h=section.querySelector('h3');if(!h)continue;
+  const title=document.createElement('h3');title.textContent=h.textContent;
+  if(column.children.length&&column.scrollHeight>column.clientHeight-60)newColumn();
+  column.append(title);if(!fits()){title.remove();newColumn();column.append(title)}
+  for(const entry of Array.from(section.children).filter(n=>n!==h))put(entry,title);
+ }
+ Array.from(output.children).forEach((p,i)=>{if(i>0&&!p.querySelector('.page-column')?.children.length)p.remove()});
+}
 showTab(tab);render();
 </script></body></html>
