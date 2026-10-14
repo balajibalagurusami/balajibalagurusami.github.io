@@ -137,9 +137,26 @@ function paginateCV(){
    }
   }
  }
+ // Treat Work History + Education as a unit when their combined height fits on an A4 page.
+ const paired=contentNodes.filter(sec=>/^(Work history|Education)$/i.test(sec.querySelector('h3')?.textContent.trim()||''));
+ const pairedDone=new Set();
+ const pairFits=()=>{
+  const probe=document.createElement('div');
+  for(const sec of paired)probe.append(sec.cloneNode(true));
+  column.append(probe);
+  const okay=fits();probe.remove();return okay;
+ };
  for(const section of contentNodes){
   const h=section.querySelector('h3');if(!h)continue;
   if(cowi&&/^(Suitability to the role|Relevance of experience)$/i.test(h.textContent.trim()))continue;
+  if(pairedDone.has(section))continue;
+  if(paired.length===2&&section===paired[0]){
+   if(!pairFits())newColumn();
+   if(pairFits()){
+    for(const sec of paired){column.append(sec.cloneNode(true));pairedDone.add(sec)}
+    continue;
+   }
+  }
   const title=document.createElement('h3');title.textContent=h.textContent;
   if(column.children.length&&column.scrollHeight>column.clientHeight-60)newColumn();
   column.append(title);if(!fits()){title.remove();newColumn();column.append(title)}
