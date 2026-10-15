@@ -37,7 +37,7 @@
 <div class="formgrid"><label class="field wide">CV template<select id="template" onchange="changeTemplate(this.value)"><option value="cowi">COWI-style project CV (sample structure)</option><option value="classic">Classic professional CV</option><option value="modern">Modern compact CV</option></select></label></div>
 <div class="tabs" id="tabs"></div><div id="formarea"></div><div class="toolbar" style="margin-top:16px"><button onclick="saveDraft()">Save draft</button><button class="secondary" onclick="downloadJSON()">Download JSON</button><button class="danger" onclick="clearSavedCV()">Clear saved data & preview</button></div></section>
 <section class="panel"><div class="previewTop"><div><h2>Live CV preview</h2><p class="hint" style="margin:3px 0">A4-ready. Browser Print can save directly as PDF.</p></div><div class="toolbar"><button onclick="window.print()">Print / PDF</button><button class="secondary" onclick="exportDocx()">Download DOCX</button></div></div><div class="preview"><article id="sheet" class="sheet"></article></div><p class="footer">The COWI-style option follows the section structure of the uploaded 7-page sample, but is an editable web recreation rather than a pixel-perfect reproduction of its Word formatting. Data remains in your browser unless you export it. Do not store confidential CVs in public GitHub repositories.</p></section></div>
-<script src="https://cdn.jsdelivr.net/npm/mammoth@1.9.0/mammoth.browser.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script src="https://cdn.jsdelivr.net/npm/docx@9.5.1/dist/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.9.0/mammoth.browser.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script src="./vendor/docx-lite.js"></script>
 <script>
 const period=x=>x.start?[x.start,x.end||'Present'].join(' to '):(x.period||'');
 const key='cv-template-builder-v1';
@@ -171,7 +171,68 @@ function saveDraft(){const email=promptApprovedEmail(data.email);if(email===null
 function downloadFile(name,content,type){let b=new Blob([content],{type});let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 function downloadJSON(){const email=promptApprovedEmail(data.email);if(email===null)return;data.email=email;downloadFile((data.name||'candidate').replace(/[^\w -]/g,'')+'-cv.json',JSON.stringify(data,null,2),'application/json')}
 async function importJSON(e){let file=e.target.files[0];if(!file)return;try{let next=JSON.parse(await file.text());if(!next||typeof next!=='object'||!Array.isArray(next.projects)||!Array.isArray(next.work)||!Array.isArray(next.education))throw Error('Invalid CV JSON structure');const cleaned=cleanCVData(next,true);if(!cleaned)return;data={...cleaned,template:['cowi','classic','modern'].includes(next.template)?next.template:'cowi'};showTab('profile');render();saveDraft()}catch(err){alert('Could not import CV: '+err.message)}e.target.value=''}
-async function exportDocx(){try{const email=promptApprovedEmail(data.email);if(email===null)return;data.email=email;if(!window.docx){alert('DOCX library did not load. Check your internet connection, or use Print / PDF.');return}const D=window.docx;const children=[];const paragraph=(text,bold=false)=>children.push(new D.Paragraph({children:[new D.TextRun({text:String(text||''),bold})],spacing:{after:130}}));const heading=(s)=>children.push(new D.Paragraph({text:s,heading:D.HeadingLevel.HEADING_2,spacing:{before:260,after:110}}));const multi=(s)=>String(s||'').split('\n').filter(Boolean).forEach(x=>paragraph(x));paragraph(data.name||'Candidate name',true);paragraph(data.role||'Professional role');paragraph([approvedEmail(data.email)?data.email:''].filter(Boolean).join(' | '));if(data.years)paragraph(data.years+' years of experience');[['Suitability to the role',data.suitability],['Relevance of experience',data.relevance],['Professional memberships',data.memberships],['Qualifications',data.qualifications],['Certifications',data.certifications],['Areas of practice',data.practice],['Role on this project',data.projectRole]].forEach(([h,v])=>{if(v){heading(h);multi(v)}});[['Work history',data.work],['Education',data.education],['Project experience',data.projects]].forEach(([h,arr])=>{if(arr.length){heading(h);arr.forEach(x=>{paragraph((h==='Work history'?[period(x),x.employer,x.position]:h==='Education'?[period(x),x.institution,x.qualification]:[period(x),x.title,x.role]).filter(Boolean).join(' | '),true);if(x.software)paragraph('Software: '+x.software);multi(x.description)})}});const doc=new D.Document({sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:950,right:900,bottom:900,left:900}}},children}]});const blob=await D.Packer.toBlob(doc);let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=(data.name||'candidate').replace(/[^\w -]/g,'')+'-cv.docx';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}catch(error){console.error('DOCX export failed',error);alert('DOCX export failed: '+(error.message||error))}}
+async function exportDocx(){
+ try{
+  const email=promptApprovedEmail(data.email);
+  if(email===null)return;
+  data.email=email;
+  if(!window.docxLite || !window.docxLite.supported()){
+   alert('The local DOCX generator is unavailable. Refresh this page and try again.');
+   return;
+  }
+  const blocks=[];
+  const addParagraph=(value,bold=false)=>{
+   for(const row of String(value||'').split('\n')){
+    const line=row.trim();
+    if(!line)continue;
+    blocks.push(bold?{type:'body',runs:[{text:line,bold:true}]}:{type:'body',text:line});
+   }
+  };
+  const section=(label,value)=>{
+   if(!String(value||'').trim())return;
+   blocks.push({type:'heading',text:label,level:2});
+   addParagraph(value);
+  };
+  blocks.push({type:'title',text:data.name||'Candidate name'});
+  addParagraph(data.role||'Professional role',true);
+  if(approvedEmail(data.email))addParagraph(data.email);
+  if(data.years)addParagraph(data.years+' years of experience');
+  section('Suitability to the Role',data.suitability);
+  section('Relevance of Experience',data.relevance);
+  section('Professional Memberships',data.memberships);
+  section('Qualifications',data.qualifications);
+  section('Certifications',data.certifications);
+  section('Areas of Practice',data.practice);
+  section('Role on this Project',data.projectRole);
+  const appendEntries=(heading,items,titleFn)=>{
+   if(!items.length)return;
+   blocks.push({type:'heading',text:heading,level:2});
+   for(const item of items){
+    const title=titleFn(item);
+    if(title)addParagraph(title,true);
+    if(item.software)addParagraph('Software used: '+item.software);
+    if(item.description)addParagraph(item.description);
+   }
+  };
+  appendEntries('Work History',data.work,x=>[period(x),x.employer,x.position].filter(Boolean).join(' | '));
+  appendEntries('Education',data.education,x=>[period(x),x.institution,x.qualification].filter(Boolean).join(' | '));
+  appendEntries('Project Experience',data.projects,x=>[period(x),x.title,x.role].filter(Boolean).join(' | '));
+  const blob=window.docxLite.build(data.name||'Candidate CV',blocks,{
+   creator:'CV Template Builder',font:'Arial',fontSize:10.5,pageSize:'A4',justify:false
+  });
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=(data.name||'candidate').replace(/[^\w -]/g,'')+'-cv.docx';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),3000);
+ }catch(error){
+  console.error('DOCX export failed',error);
+  alert('DOCX export failed: '+(error?.message||String(error)));
+ }
+}
 
 /* Divide CV contents into A4 sized pages, with sidebar on the first page only. */
 function paginateCV(){
