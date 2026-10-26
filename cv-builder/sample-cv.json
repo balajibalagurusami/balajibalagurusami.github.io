@@ -1,0 +1,144 @@
+{
+  "template": "cowi",
+  "name": "Balaji Balagurusami",
+  "role": "BIM Manager",
+  "team": "Heavy Civil",
+  "years": "14",
+  "suitability": "Balaji is a highly skilled BIM Manager with extensive experience in driving Building Information Modeling (BIM) strategies across complex infrastructure projects. With a strong focus on ensuring the seamless implementation of BIM Execution Plans, he plays a pivotal role in maximizing project efficiency and delivering high-quality outputs.\n\nSince joining COWI in 2023, he has successfully led the BIM delivery of two major projects such as DC Water - Potomac River Tunnel and Sund &Baelt Denmark's Østlig Ringvej (Eastern Ring Road). In addition to his project responsibilities, he has been actively involved in knowledge sharing and upskilling initiatives. He has conducted training sessions for colleagues across India, Denmark, and Sweden on key topics such as BIM Coordination, Information Management, and Navisworks (Intermediate & Advanced).",
+  "relevance": "He contributed first as discipline BIM Coordinator for Tunnel asset and then as overall project BIM Coordinator for all disciplines in the 3rd Limfjord Link project in Denmark, where his responsibilities are managing the iModel, creating forms and clash detection reports, controlling the ProjectWise model upload, and user access control.\n\nHis mentorship extends beyond technical skills; he has supported colleagues by sharing his experience in attaining the Autodesk Certified Professional in Revit Structure, helping them navigate the certification process effectively.\n\nSpecializing in both 3D modeling and 2D drafting, he excels in interdisciplinary collaboration, facilitating effective communication between teams and stakeholders to ensure successful project coordination. His expertise spans a wide range of BIM-related domains, including clash detection analysis, asset data integration, and interoperability through IFC standards.\n\nHis comprehensive understanding of project lifecycles allows him to lead efforts in 4D sequencing for project timelines and 5D cost analysis for budgeting purposes. His proficiency in developing and maintaining Master Information Delivery Plans ensures the structured and efficient flow of project data.\n\nBeyond technical capabilities, he is adept at team management, client relationship building, and strategic budgeting, consistently delivering results that align with organizational goals and client expectations. His commitment to innovation and excellence in BIM management makes him an invaluable asset to any project.",
+  "memberships": "Engineering Technician, Member of Institution of Civil Engineers",
+  "qualifications": "B.E. Civil Engineering",
+  "certifications": "Autodesk Certified Professional - Revit Structure",
+  "practice": "BIM - Tunnels and Underground Structures",
+  "projectRole": "BIM Coordinator",
+  "email": "babs@cowi.com",
+  "work": [
+    {
+      "period": "2026-01 to Present",
+      "employer": "COWI",
+      "position": "Head of Discipline",
+      "description": "Managing a team of 21 people, responsible for their onboarding, performance evaluation, training, offboarding, upskilling for project specific requirements, mentoring and coaching. ",
+      "start": "2026-01",
+      "end": "2026-10"
+    },
+    {
+      "period": "2023-10 to 2026-01",
+      "employer": "COWI",
+      "position": "BIM Manager",
+      "description": "BIM Management, Design Coordination, BIM Coordination, Training the Team on BIM Coordination and Information Management topics via COWI Academy",
+      "start": "2023-10",
+      "end": "2026-01"
+    },
+    {
+      "period": "2022-06 to 2023-10",
+      "employer": "J&F India Private Limited",
+      "position": "Assistant Manager - BIM",
+      "description": "Project bidding, BIM Management, mentoring and coaching a team of 10 BIM Professionals",
+      "start": "2021-10",
+      "end": "2023-10"
+    },
+    {
+      "period": "",
+      "employer": "HOCHTIEF India Private Limited",
+      "position": "Team Leader - BIM",
+      "description": "Team management, Effort estimation, Performance Evaluation of Team members, monitoring quality, timeliness, accuracy, suitability of BIM and CAD Deliverables, Supported project manager on project performance tracking",
+      "start": "2019-10",
+      "end": "2021-10"
+    },
+    {
+      "start": "2017-05",
+      "end": "2019-10",
+      "employer": "HOCHTIEF India Private Limited",
+      "position": "Senior BIM Specialist",
+      "description": "Doing multi-disciplinary BIM Modelling and Coordination"
+    },
+    {
+      "period": "2014-07 to 2017-04",
+      "employer": "HOCHTIEF ViCon Qatar W.L.L.",
+      "position": "BIM Specialist",
+      "description": "BIM Coordination, Laser Scanning, Point Cloud Registration, As Built Modelling, Field BIM Verification, Model based Quantity Take off, Clash Detection",
+      "start": "2014-07",
+      "end": "2017-04"
+    },
+    {
+      "period": "2013-03 to 2014-06",
+      "employer": "HOCHTIEF India Private Limited",
+      "position": "Design Engineer BIM",
+      "description": "Revit Modeling, 2D AutoCAD Drafting, Revit Family Creation, Good for Construction drawing preparation for Architecture, Structural drawings",
+      "start": "2013-03",
+      "end": "2014-06"
+    }
+  ],
+  "education": [
+    {
+      "period": "2028-09 to 2012-05",
+      "institution": "Anna University",
+      "qualification": "B.E. Civil Engineering",
+      "description": "",
+      "start": "2008-09",
+      "end": "2012-05"
+    }
+  ],
+  "projects": [
+    {
+      "period": "2025-04 - Present",
+      "title": "3rd Limfjord Link, Aalborg, Denmark",
+      "role": "BIM Manager",
+      "description": "The 3rd Limfjord Link is a major infrastructure project near Aalborg, Denmark, involving approximately 20 km of new four-lane motorway connecting the E45 and E39 highways via Egholm Island. The project includes road networks, interchanges, railway overbridges, valley bridges, low-level fjord bridges and associated structures, alongside an immersed tunnel crossing. It aims to reduce traffic congestion, improve regional connectivity and enhance transport efficiency across the Limfjord.",
+      "software": "Autodesk Revit, Bentley iTwin Synchronizer, iModels, Autodesk Construction Cloud",
+      "start": "2025-04",
+      "end": "2026-10",
+      "responsibilities": "Performed the role of Project's Overall BIM Coordinator\nManaged User access controls for members of Assets\nDid automated Clash Detection using iTwin\nManaged Cloud Work-sharing for Revit, Civil 3D based models Autodesk Forma Data Management (ACC)\nDid Production / QA activities for Concept Design Drawings (Illustrative Design) and Definition Design Drawings"
+    },
+    {
+      "period": "2023-12 to 2025-03",
+      "title": "Eastern Ring Road - Copenhagen,Denmark",
+      "role": "Discipline BIM Coordinator",
+      "description": "The Østlig Ringvej (ORV) Project in Copenhagen, Denmark, involves the development of major road infrastructure, including immersed tunnels, cut-and-cover tunnels, and associated construction logistics. The project incorporates BIM-based design coordination, 3D modelling, clash detection, asset information management, and parametric modelling workflows to support efficient design development and multidisciplinary collaboration.",
+      "start": "2024-01",
+      "end": "2026-10",
+      "software": "Revit, Civil 3D, AutoCAD, Navisworks, Assistant by AEC (Formerly COWI Assistant)",
+      "responsibilities": "Joined the Østlig Ringvej (ORV) Project towards the end of Phase 3, supporting the development of conceptual design models at LOD 300.\n\nManaged BIM coordination for three disciplines in Phase 4: Immersed Tunnel, Cut & Cover Tunnel, and Construction Logistics.\n\nCoordinated design development between Discipline Leads, Designers, and BIM Modelling and Drafting teams at COWI's Engineering Design Centre in Chennai.\n\nDeveloped Dynamo scripts to automate repetitive modelling tasks and improve workflow efficiency.\n\nPerformed clash detection analysis, model coordination reviews, and clash issue management across disciplines.\n\nSupported automation of clash issue grouping based on asset information using COWI Assistant, generating categorised PDF and Excel reports.\n\nEnsured integration of Asset Reference System parameters into model elements in accordance with the BIM Execution Plan.\n\nConfigured IFC exports using Property Set (.txt) and IFC Export Setup (.json) files to ensure accurate transfer of asset information.\n\nCollaborated with Grasshopper specialists to develop shared parameters and parametric modelling workflows for Cut & Cover Tunnel structures.\n\nImplemented efficient workflows for iterative design changes, enabling automatic updates to tunnel dimensions and minimising abortive modelling work."
+    },
+    {
+      "period": "2023-10 to",
+      "title": "Potomac River Tunnel, Washington DC, Unites States",
+      "role": "EDC Coordinator",
+      "description": "The Potomac River Tunnel (PRT) is the next major phase of the DC Clean Rivers Project. The project consists of a large-diameter deep sewer tunnel, diversion facilities, drop shafts, and support structures to capture flows from existing combined sewer overflows (CSOs) along the Potomac River and convey them to the Blue Plains Advanced Wastewater Treatment Plant for treatment. There are 8 CSO outfall locations on the Potomac River. In a year of average rainfall some 74 CSO events discharge approximately 654 million gallons of CSO into the Potomac. When complete, the PRT is estimated to reduce those events to four and reduce the volume of CSOs by 93% in an average rainfall year. COWI is the designer of the tunnel and adits, and provides geotechnical support for the entire project.\n",
+      "software": "AutoCAD, Civil 3D",
+      "start": "2023-10",
+      "end": "2024-01",
+      "responsibilities": "Engineering Design Centre Coordinator\nManaging delivery of 30%, 60%, 90% and 100% Design documentation till Issued for Construction Stage\nRelaying BlueBeam Markups to the production team and performing secondary QA"
+    },
+    {
+      "period": "2024-01 to 2024-06",
+      "title": "UK STW Projects - Pangbourne & Chipping Norton",
+      "role": "BIM Modeller",
+      "description": "The Chipping Norton and Pangbourne STW projects involve wastewater treatment infrastructure in the UK, including treatment tanks, pipework, mechanical equipment, access structures and associated civil works. The projects incorporate BIM-based multidisciplinary coordination, 3D modelling, clash detection and detailed construction documentation to support efficient wastewater treatment operations and environmental compliance.",
+      "software": "Autodesk Revit, Navisworks",
+      "start": "2024-01",
+      "end": "2024-06",
+      "responsibilities": "Prepared a best practices document and delivered presentations to the project team to minimise recurring errors and improve drawing documentation quality.\n\nDeveloped Revit MEP families for gate valves, non-return valves, pipe fittings, and HDPE and ductile iron pipes based on manufacturer catalogues.\n\nCreated parametric schedules for pipe support pedestals and test pits, including Easting, Northing, and Reduced Level (RL) coordinates.\n\nEnsured automatic updates of setting-out coordinates and elevation parameters in schedules following model revisions.\n\nPerformed clash detection and coordination reviews to identify and resolve design conflicts.\n\nVerified Stage Gate 3 drawing dimensions against BIM models to ensure accuracy and consistency.\n\nModelled staircases to accommodate existing site topography and required levels of wastewater treatment tanks.\n\nCollaborated with Design Engineers to update reinforcement details in 2D drawing views.\n\nManaged drawing risk registers using Revit schedules and filters to maintain consistent risk codes and descriptions across multiple drawings.\n\nImplemented standardised documentation practices to improve drawing quality, consistency, and efficiency."
+    },
+    {
+      "period": "2017-04 to 2023-10",
+      "title": "West Gate Tunnel Project",
+      "role": "BIM Team Leader",
+      "description": "The West Gate Tunnel Project is a major transport infrastructure development in Melbourne, Australia, involving twin road tunnels, new bridges across the Maribyrnong River, elevated road structures, and upgrades to the West Gate Freeway. The project includes complex structural steel and concrete works, road interchanges, and connections to the Port of Melbourne and the city centre. It aims to reduce traffic congestion, improve freight movement, and provide an alternative crossing to the existing West Gate Bridge.",
+      "software": "Autodesk Revit, Navisworks, Revizto, Fuzor, Autodesk Estiamte",
+      "start": "2017-05",
+      "end": "2023-10",
+      "responsibilities": "BIM Modeling\nBIM Coordination\nClash Detection\nDrawing Documentation\nMaterial Take Off"
+    },
+    {
+      "period": "2014-07 to 2017-04",
+      "title": "District Cooling Plants CP3 CP6, Education City, Qatar",
+      "role": "As Built BIM Modeller, Laser Scanning Specialist, Scan to BIM Modeller",
+      "description": "The CP3 and CP6 District Cooling Plants are major infrastructure facilities developed for Qatar Foundation's Education City in Doha, Qatar. Located within the North Campus, each plant has a cooling capacity of 40,000 refrigeration tons (RT). The projects involve centralised chilled-water production, mechanical and electrical systems, utility infrastructure, and associated civil and structural works. These facilities provide reliable, energy-efficient cooling to educational, research, and institutional buildings across Education City.",
+      "software": "Autodesk Revit, ReCap, Navisworks, IBM Maximo",
+      "start": "2014-07",
+      "end": "2017-04",
+      "responsibilities": "Prepared As Built Models based on Laser Scanned captured by myself and my team. \nAs Building modelling Applications were used to deliver high accuracy LOD 500 Model with 15mm precision.\n"
+    }
+  ]
+}
