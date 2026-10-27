@@ -1278,17 +1278,138 @@ function downloadHTML(){
  }
 }
 
-/* Direct multi-page A4 PDF export, separate from the existing browser Print/PDF. */
+/* Searchable, text-native A4 PDF export. Only the decorative COWI logo is an image.
+   Text and visual rules are positioned from the already paginated HTML preview. */
 function loadPdfLibrary(src,isReady){
  if(isReady())return Promise.resolve();
  return new Promise((resolve,reject)=>{
   const script=document.createElement('script');
-  script.src=src;
-  script.async=true;
+  script.src=src;script.async=true;
   script.onload=()=>isReady()?resolve():reject(new Error('PDF library did not initialise'));
   script.onerror=()=>reject(new Error('Could not load PDF library'));
   document.head.appendChild(script);
  });
+}
+function pdfCSSColor(value,defaultRGB=[37,56,69]){
+ const match=String(value||'').match(/rgba?\(\s*(\d+)[,\s]+(\d+)[,\s]+(\d+)/i);
+ if(match)return [Number(match[1]),Number(match[2]),Number(match[3])];
+ const hex=String(value||'').trim().match(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i);
+ if(hex){
+  const s=hex[1].length===3?hex[1].split('').map(x=>x+x).join(''):hex[1];
+  return [parseInt(s.slice(0,2),16),parseInt(s.slice(2,4),16),parseInt(s.slice(4,6),16)];
+ }
+ return defaultRGB;
+}
+function addSearchableCVPage(pdf,page){
+ const frame=page.getBoundingClientRect();
+ if(frame.width<100||frame.height<100)throw new Error('CV page has no measurable layout');
+ const sx=210/frame.width,sy=297/frame.height;
+ const X=v=>(v-frame.left)*sx,Y=v=>(v-frame.top)*sy;
+ const rect=el=>el.getBoundingClientRect();
+ const drawLine=(x1,y1,x2,y2,color,width)=>{
+  pdf.setDrawColor(...pdfCSSColor(color,[160,200,215]));
+  pdf.setLineWidth(Math.max(.12,width||.25));
+  pdf.line(x1,y1,x2,y2);
+ };
+ pdf.setFillColor(255,255,255);pdf.rect(0,0,210,297,'F');
+ // The page and its headings remain vector artwork.
+ if(page.classList.contains('modern')){
+  pdf.setFillColor(8,122,149);pdf.rect(0,0,210,3.2,'F');
+ }
+ drawLine(0,0,210,0,'rgb(49,84,103)',.54);
+ if(page.classList.contains('cowi')){
+  // Extract the decorative logo already used in the CSS, avoiding any CV screenshot.
+  try{
+   const logoCSS=getComputedStyle(page,'::after').backgroundImage;
+   const logo=logoCSS.match(/data:image\/png;base64,[A-Za-z0-9+/=]+/);
+   if(logo){
+    const style=getComputedStyle(page,'::after');
+    const w=parseFloat(style.width),h=parseFloat(style.height);
+    const r=parseFloat(style.right),t=parseFloat(style.top);
+    if([w,h,r,t].every(Number.isFinite)&&w>0&&h>0){
+     pdf.addImage(logo[0],'PNG',210-(r+w)*sx,t*sy,w*sx,h*sy,undefined,'FAST');
+    }
+   }
+  }catch(err){console.warn('PDF decorative logo skipped',err)}
+ }
+ const banner=page.querySelector('.page-banner');
+ if(banner&&page.classList.contains('cowi')){
+  const b=rect(banner),c=pdfCSSColor(getComputedStyle(banner).backgroundColor,[233,91,11]);
+  pdf.setFillColor(...c);
+  pdf.roundedRect(X(b.left),Y(b.top),b.width*sx,b.height*sy,4,4,'F');
+ }
+ const rail=page.querySelector('.first-grid aside');
+ if(rail){
+  const b=rect(rail);
+  drawLine(X(b.right),Y(b.top),X(b.right),Y(b.bottom),'rgb(217,229,235)',.24);
+ }
+ page.querySelectorAll('h3').forEach(h=>{
+  const s=getComputedStyle(h),b=rect(h);
+  const bw=parseFloat(s.borderBottomWidth);
+  if(bw>0)drawLine(X(b.left),Y(b.bottom)-.3,X(b.right),Y(b.bottom)-.3,s.borderBottomColor,bw*sx);
+ });
+ // Every visible text run is written with PDF text operators, not addImage().
+ const iterator=document.createTreeWalker(page,NodeFilter.SHOW_TEXT);
+ const range=document.createRange();
+ let node,printed=0;
+ while((node=iterator.nextNode())){
+  const parent=node.parentElement,source=node.nodeValue||'';
+  if(!parent||!source.trim())continue;
+  const style=getComputedStyle(parent);
+  if(style.display==='none'||style.visibility==='hidden'||style.fontSize==='0px')continue;
+  const px=parseFloat(style.fontSize);
+  if(!Number.isFinite(px)||px<=0)continue;
+  const isBold=style.fontWeight==='bold'||Number(style.fontWeight)>=600;
+  const isItalic=style.fontStyle==='italic';
+  pdf.setFont('helvetica',isBold?(isItalic?'bolditalic':'bold'):(isItalic?'italic':'normal'));
+  const pointSize=px*72/96;
+  pdf.setFontSize(pointSize);
+  pdf.setTextColor(...pdfCSSColor(style.color));
+  const spacing=parseFloat(style.letterSpacing);
+  pdf.setCharSpace(Number.isFinite(spacing)?spacing*72/96:0);
+  let run=null;
+  const flush=()=>{
+   if(!run)return;
+   let txt=run.value.replace(/[\t\r\n]+/g,' ').trim();
+   run=null;
+   if(!txt)return;
+   if(style.textTransform==='uppercase')txt=txt.toUpperCase();
+   else if(style.textTransform==='capitalize')txt=txt.replace(/\b\p{L}/gu,s=>s.toUpperCase());
+   const xx=X(saved.left),yy=Y(saved.top+saved.height*.80);
+   if(xx>=210||yy<0||yy>297||saved.right<frame.left)return;
+   // Standard PDF fonts support the common Western CV punctuation characters.
+   // Replace directional controls that cannot be rendered as visible glyphs.
+   txt=txt.replace(/[\u200B-\u200D\uFEFF]/g,'');
+   pdf.text(txt,Math.max(0,xx),yy,{baseline:'alphabetic'});
+   printed++;
+  };
+  // A DOM Range gives the exact line coordinates after CSS wrapping/pagination.
+  // Joining words on the same line keeps search/copy behaviour natural.
+  let saved=null;
+  const accept=(content,b)=>{
+   if(!content.trim()&&!run)return;
+   if(b.bottom<=frame.top||b.top>=frame.bottom||b.width<=0)return;
+   if(run&&Math.abs(b.top-run.top)>2){saved=run;flush()}
+   if(!run)run={left:b.left,right:b.right,top:b.top,height:b.height,value:content};
+   else{run.value+=content;run.right=Math.max(run.right,b.right)}
+  };
+  const tokens=source.matchAll(/\S+[^\S\r\n]*/g);
+  for(const match of tokens){
+   const start=match.index,end=start+match[0].length;
+   range.setStart(node,start);range.setEnd(node,end);
+   const boxes=Array.from(range.getClientRects()).filter(r=>r.width>0&&r.height>0);
+   if(boxes.length===1){accept(match[0],boxes[0]);continue}
+   // Long unbroken words can wrap inside a word; preserve both visible lines.
+   for(let j=start;j<end;j++){
+    range.setStart(node,j);range.setEnd(node,j+1);
+    const chars=Array.from(range.getClientRects()).filter(r=>r.width>0&&r.height>0);
+    if(chars.length)accept(source[j],chars[0]);
+   }
+  }
+  if(run){saved=run;flush()}
+ }
+ range.detach?.();
+ return printed;
 }
 async function downloadCVPDF(){
  const button=document.getElementById('download-cv-pdf');
@@ -1296,54 +1417,35 @@ async function downloadCVPDF(){
  const label=button?.querySelector('span');
  const oldLabel=label?.textContent||'Download CV PDF';
  if(button){button.disabled=true;if(label)label.textContent='Preparing PDF';}
- let stage=null;
  try{
   const pages=Array.from(document.querySelectorAll('#sheet > .sheet.page'));
   if(!pages.length)throw new Error('No CV pages to export. Enter CV details first.');
   try{
-   await Promise.all([
-    loadPdfLibrary('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',()=>typeof window.html2canvas==='function'),
-    loadPdfLibrary('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',()=>typeof window.jspdf?.jsPDF==='function')
-   ]);
-  }catch(libraryError){
-   throw new Error('Direct PDF export requires an internet connection to load its libraries. Use the existing Print / PDF button (Save as PDF) when offline.');
+   await loadPdfLibrary('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',()=>typeof window.jspdf?.jsPDF==='function');
+  }catch(err){
+   throw new Error('The searchable PDF library could not load. Check your internet connection or use Print / PDF in Chrome or Edge.');
   }
   const pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
-  // Capture each already-paginated A4 page independently to avoid a second pagination.
-  stage=document.createElement('div');
-  stage.style.cssText='position:fixed;left:0;top:0;width:210mm;height:297mm;background:#fff;z-index:-1;pointer-events:none;overflow:visible';
-  document.body.appendChild(stage);
+  pdf.setProperties({title:(data.name||'Candidate')+' CV',subject:'Searchable CV',creator:'CV Template Builder'});
+  let totalTextRuns=0;
   for(let i=0;i<pages.length;i++){
-   if(label)label.textContent='Page '+(i+1)+' / '+pages.length;
-   const page=pages[i].cloneNode(true);
-   page.style.margin='0';
-   page.style.boxShadow='none';
-   stage.replaceChildren(page);
-   const canvas=await window.html2canvas(page,{
-    backgroundColor:'#ffffff',
-    scale:2,
-    logging:false,
-    useCORS:true,
-    imageTimeout:15000,
-    scrollX:0,
-    scrollY:0
-   });
-   if(!canvas.width||!canvas.height)throw new Error('Could not render CV page '+(i+1));
    if(i)pdf.addPage('a4','portrait');
-   pdf.addImage(canvas.toDataURL('image/jpeg',0.94),'JPEG',0,0,210,297,undefined,'FAST');
-   canvas.width=0;canvas.height=0;
+   if(label)label.textContent='Page '+(i+1)+' / '+pages.length;
+   totalTextRuns+=addSearchableCVPage(pdf,pages[i]);
   }
-  const fileName=(String(data.name||'Candidate').trim()||'Candidate')
+  if(!totalTextRuns)throw new Error('No selectable text could be generated from the CV preview.');
+  const filename=(String(data.name||'Candidate').trim()||'Candidate')
    .replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').slice(0,90)+'-CV.pdf';
-  pdf.save(fileName);
+  pdf.save(filename);
+  showStatus('Searchable PDF downloaded with selectable text ('+pages.length+' A4 page'+(pages.length===1?'':'s')+').','success');
  }catch(error){
-  console.error('Direct CV PDF download failed',error);
-  showStatus('Could not download CV PDF: '+(error.message||String(error))+'. If this is blocked in Teams or SharePoint, open the builder in a browser tab or use Print / PDF there.','error');
+  console.error('Searchable CV PDF export failed',error);
+  showStatus('Could not download searchable CV PDF: '+(error.message||String(error))+'. Alternatively use Print / PDF in a normal browser tab.','error');
  }finally{
-  if(stage)stage.remove();
   if(button){button.disabled=false;if(label)label.textContent=oldLabel;}
  }
 }
+
 function downloadJSON(){
  requestApprovedEmail(data.email,email=>{
   data.email=email;render();
