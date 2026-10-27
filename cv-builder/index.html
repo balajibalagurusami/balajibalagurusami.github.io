@@ -892,7 +892,7 @@ header .app-action.is-sample:hover{background:#fff}
 const period=x=>x.start?[x.start,x.end||'Present'].join(' to '):(x.period||'');
 const key='cv-template-builder-v1';
 const blank=()=>({template:'cowi',name:'',role:'',team:'',years:'',suitability:'',relevance:'',memberships:'',qualifications:'',certifications:'',practice:'',projectRole:'',email:'',personalEmail:'',phoneCountryCode:'+91',phoneNumber:'',includePersonalContactsInPdf:false,work:[],education:[],projects:[]});
-let data=blank(),tab='profile';try{const v=JSON.parse(localStorage.getItem(key)||'null');if(v)data=cleanCVData(v,false);}catch(e){}
+let data=blank(),tab='profile';
 const approvedEmail=v=>/^[^\s@]+@(?:cowi\.com|(?:[a-z0-9-]+\.)*arcadis\.com|(?:[a-z0-9-]+\.)*setec\.fr|(?:[a-z0-9-]+\.)*setec\.com)$/i.test(String(v||'').trim());
 let pendingInlineConfirmation=null;
 let pendingWorkEmailCallback=null;
@@ -975,6 +975,12 @@ function cleanCVData(source,ask=false){
  }
  return d;
 }
+// Restore local drafts only after the email validator and sanitizer exist.
+// In restricted embeds where localStorage throws, the builder still opens.
+try{
+ const previous=JSON.parse(localStorage.getItem(key)||'null');
+ if(previous)data=cleanCVData(previous,false);
+}catch(e){console.warn('Saved CV draft could not be restored in this browser',e)}
 const sections=[['profile','Profile'],['summary','Suitability'],['credentials','Credentials'],['work','Work history'],['education','Education'],['projects','Projects']];
 const schemas={work:[['start','Start (YYYY-MM)','month'],['end','End (YYYY-MM)','month'],['employer','Employer'],['position','Job title'],['description','Additional details','textarea']],education:[['start','Start (YYYY-MM)','month'],['end','End (YYYY-MM)','month'],['institution','Institution'],['qualification','Qualification'],['description','Notes','textarea']],projects:[['start','Start (YYYY-MM)','month'],['end','End (YYYY-MM)','month'],['title','Project name'],['role','Role on project'],['software','Software used (comma-separated)'],['description','Project description (short paragraph)','textarea'],['responsibilities','Responsibilities (one per line)','textarea']]};
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -1234,10 +1240,18 @@ function downloadHTML(){
   if(promptBox)promptBox.textContent='';
   const extractedBox=snapshot.querySelector('#cv-extract-json');
   if(extractedBox)extractedBox.textContent='';
-  for(const overlay of ['#copilot-helper','#cv-extract-overlay']){
+  for(const overlay of ['#copilot-helper','#cv-extract-overlay','#cv-action-panel']){
    const el=snapshot.querySelector(overlay);
    if(el)el.classList.add('hidden');
   }
+  const actionMessage=snapshot.querySelector('#cv-action-message');
+  if(actionMessage)actionMessage.textContent='';
+  const emailMessage=snapshot.querySelector('#cv-email-error');
+  if(emailMessage)emailMessage.textContent='';
+  const actionEmail=snapshot.querySelector('#cv-action-email');
+  if(actionEmail){actionEmail.removeAttribute('value');actionEmail.value='';}
+  const inlineStatus=snapshot.querySelector('#cv-inline-status');
+  if(inlineStatus){inlineStatus.textContent='';inlineStatus.className='inline-status hidden';}
   const personalToggle=snapshot.querySelector('#pdf-personal-contact-toggle');
   if(personalToggle){personalToggle.removeAttribute('checked');personalToggle.checked=false;}
   const selectedTemplate=snapshot.querySelector('#template');
