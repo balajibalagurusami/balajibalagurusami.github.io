@@ -35,7 +35,7 @@
 /* Compact icon-based CV action header */
 header.app-header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 22px}
 header .app-brand{flex:0 0 auto}
-header .app-actions{display:grid;grid-template-columns:repeat(7,minmax(91px,1fr));align-items:stretch;gap:9px;width:min(900px,100%)}
+header .app-actions{display:grid;grid-template-columns:repeat(8,minmax(91px,1fr));align-items:stretch;gap:9px;width:min(1050px,100%)}
 header .app-action{box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:69px;padding:9px 8px;border:1px solid #cbdce6;border-radius:9px;background:#f0f5f8;color:#143a51;cursor:pointer;font:600 11.5px/1.2 Inter,Segoe UI,Arial,sans-serif;box-shadow:0 1px 2px #091d2f17;text-align:center;white-space:nowrap}
 header .app-action svg{flex-shrink:0}
 header .app-action:hover{background:#fff;border-color:#8db2c5}
@@ -63,6 +63,7 @@ header .app-action.is-sample:hover{background:#c9e6da}
   <button type="button" class="app-action is-primary" onclick="saveDraft()" title="Save current CV draft" aria-label="Save current CV draft"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h13l3 3v13H4z"/><path d="M8 4v6h8V4"/><path d="M8 20v-7h8v7"/></svg><span>Save draft</span></button>
   <button type="button" class="app-action " onclick="downloadJSON()" title="Export CV data as JSON" aria-label="Export CV data as JSON"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v4h16v-4"/></svg><span>Export JSON</span></button>
   <button type="button" class="app-action" onclick="downloadHTML()" title="Download reusable offline HTML CV Builder (no current candidate data)" aria-label="Download standalone HTML CV Builder"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/><path d="M12 12v7m0 0-4-4m4 4 4-4"/></svg><span>Download HTML</span></button>
+  <button type="button" id="download-cv-pdf" class="app-action" onclick="downloadCVPDF()" title="Download the current CV directly as an A4 PDF" aria-label="Download current CV as PDF"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h9l4 4v16H6z"/><path d="M15 2v5h4"/><path d="M9 12h7M9 15h7"/><path d="M12 17v3m0 0-2-2m2 2 2-2"/></svg><span>Download CV PDF</span></button>
   <button type="button" class="app-action " onclick="openCopilotHelper()" title="Extract CV with Microsoft 365 Copilot" aria-label="Extract CV with Microsoft 365 Copilot"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 1.9 6.1L20 10l-6.1 1.9L12 18l-1.9-6.1L4 10l6.1-1.9z"/><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9z"/></svg><span>AI Copilot</span></button>
   <button type="button" class="app-action " onclick="document.getElementById('cv-upload-file').click()" title="Extract CV from PDF or DOCX to JSON" aria-label="Extract CV from PDF or DOCX to JSON"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h8l5 5v15H6z"/><path d="M14 2v6h5"/><path d="M12 11v7m0 0-3-3m3 3 3-3"/></svg><span>Extract CV</span></button>
   <button type="button" class="app-action " onclick="document.getElementById('cv-import-json').click()" title="Import existing CV JSON" aria-label="Import existing CV JSON"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v5h4"/><path d="M12 18v-7m0 0-3 3m3-3 3 3"/></svg><span>Import JSON</span></button>
@@ -1066,6 +1067,73 @@ function downloadHTML(){
  }catch(err){
   console.error('HTML export failed',err);
   alert('Could not download HTML: '+(err.message||err));
+ }
+}
+
+/* Direct multi-page A4 PDF export, separate from the existing browser Print/PDF. */
+function loadPdfLibrary(src,isReady){
+ if(isReady())return Promise.resolve();
+ return new Promise((resolve,reject)=>{
+  const script=document.createElement('script');
+  script.src=src;
+  script.async=true;
+  script.onload=()=>isReady()?resolve():reject(new Error('PDF library did not initialise'));
+  script.onerror=()=>reject(new Error('Could not load PDF library'));
+  document.head.appendChild(script);
+ });
+}
+async function downloadCVPDF(){
+ const button=document.getElementById('download-cv-pdf');
+ if(button?.disabled)return;
+ const label=button?.querySelector('span');
+ const oldLabel=label?.textContent||'Download CV PDF';
+ if(button){button.disabled=true;if(label)label.textContent='Preparing PDF';}
+ let stage=null;
+ try{
+  const pages=Array.from(document.querySelectorAll('#sheet > .sheet.page'));
+  if(!pages.length)throw new Error('No CV pages to export. Enter CV details first.');
+  try{
+   await Promise.all([
+    loadPdfLibrary('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',()=>typeof window.html2canvas==='function'),
+    loadPdfLibrary('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',()=>typeof window.jspdf?.jsPDF==='function')
+   ]);
+  }catch(libraryError){
+   throw new Error('Direct PDF export requires an internet connection to load its libraries. Use the existing Print / PDF button (Save as PDF) when offline.');
+  }
+  const pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+  // Capture each already-paginated A4 page independently to avoid a second pagination.
+  stage=document.createElement('div');
+  stage.style.cssText='position:fixed;left:0;top:0;width:210mm;height:297mm;background:#fff;z-index:-1;pointer-events:none;overflow:visible';
+  document.body.appendChild(stage);
+  for(let i=0;i<pages.length;i++){
+   if(label)label.textContent='Page '+(i+1)+' / '+pages.length;
+   const page=pages[i].cloneNode(true);
+   page.style.margin='0';
+   page.style.boxShadow='none';
+   stage.replaceChildren(page);
+   const canvas=await window.html2canvas(page,{
+    backgroundColor:'#ffffff',
+    scale:2,
+    logging:false,
+    useCORS:true,
+    imageTimeout:15000,
+    scrollX:0,
+    scrollY:0
+   });
+   if(!canvas.width||!canvas.height)throw new Error('Could not render CV page '+(i+1));
+   if(i)pdf.addPage('a4','portrait');
+   pdf.addImage(canvas.toDataURL('image/jpeg',0.94),'JPEG',0,0,210,297,undefined,'FAST');
+   canvas.width=0;canvas.height=0;
+  }
+  const fileName=(String(data.name||'Candidate').trim()||'Candidate')
+   .replace(/[\\/:*?"<>|]+/g,'').replace(/\s+/g,' ').slice(0,90)+'-CV.pdf';
+  pdf.save(fileName);
+ }catch(error){
+  console.error('Direct CV PDF download failed',error);
+  alert('Could not download CV PDF: '+(error.message||String(error))+'\n\nYou can still use Print / PDF to save a PDF using your browser.');
+ }finally{
+  if(stage)stage.remove();
+  if(button){button.disabled=false;if(label)label.textContent=oldLabel;}
  }
 }
 function downloadJSON(){const email=promptApprovedEmail(data.email);if(email===null)return;data.email=email;downloadFile((data.name||'candidate').replace(/[^\w -]/g,'')+'-cv.json',JSON.stringify(data,null,2),'application/json')}
