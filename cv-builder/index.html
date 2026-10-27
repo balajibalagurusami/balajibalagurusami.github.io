@@ -1159,10 +1159,26 @@ function paginateCV(){
     const main=document.createElement('main');main.className='page-column';grid.append(side,main);p.append(grid);output.append(p);return main;
    }
   }
-  const col=document.createElement('div');col.className='page-column continued';p.append(col);output.append(p);return col;
+  const col=document.createElement('div');col.className='page-column continued';p.append(col);output.append(p);
+  // A classic/modern first page has a name/role banner above the content.
+  // Subtract its measured height from the content column; otherwise the
+  // full-height column extends off the physical A4 sheet when printed.
+  if(first&&!cowi){
+   const bottomPadding=parseFloat(getComputedStyle(p).paddingBottom)||0;
+   const available=p.getBoundingClientRect().bottom-bottomPadding-col.getBoundingClientRect().top;
+   col.style.height=Math.max(100,Math.floor(available))+'px';
+  }
+  return col;
  }
  let column=newPage(true);
  const fits=()=>column.scrollHeight<=column.clientHeight+1;
+ // A fixed-height column's scrollHeight is AT LEAST its clientHeight even
+ // when almost empty. Measure the last child instead when deciding whether
+ // there is room for the next section heading.
+ const usedHeight=()=>{
+  const last=column.lastElementChild;
+  return last?last.getBoundingClientRect().bottom-column.getBoundingClientRect().top:0;
+ };
  const newColumn=()=>{column=newPage(false)};
  function put(node,heading){
   const clone=node.cloneNode(true);column.append(clone);
@@ -1227,7 +1243,7 @@ function paginateCV(){
    }
   }
   const title=document.createElement('h3');title.textContent=h.textContent;
-  if(column.children.length&&column.scrollHeight>column.clientHeight-60)newColumn();
+  if(column.children.length&&usedHeight()>column.clientHeight-60)newColumn();
   column.append(title);if(!fits()){title.remove();newColumn();column.append(title)}
   for(const entry of Array.from(section.children).filter(n=>n!==h))put(entry,title);
  }
