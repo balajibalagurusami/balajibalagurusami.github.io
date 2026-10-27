@@ -46,6 +46,16 @@ header .app-action.is-sample{background:#dfeee8;border-color:#95c0ad;color:#1955
 header .app-action.is-sample:hover{background:#c9e6da}
 @media(max-width:1200px){header.app-header{align-items:flex-start;flex-direction:column}header .app-actions{width:100%;max-width:850px}}
 @media(max-width:720px){header.app-header{padding:12px 14px}header .app-actions{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}header .app-action{min-height:64px;font-size:11px;white-space:normal;padding:7px 3px}}
+
+/* Compact credentials for classic and modern CVs only. */
+.sheet.classic .compact-credentials,.sheet.modern .compact-credentials{margin:10px 0 14px}
+.sheet.classic .compact-credentials>h3,.sheet.modern .compact-credentials>h3{margin:13px 0 9px}
+.sheet.classic .credentials-grid,.sheet.modern .credentials-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:21px;row-gap:9px;align-items:start}
+.sheet.classic .credential-item,.sheet.modern .credential-item{min-width:0;break-inside:avoid;page-break-inside:avoid;border-left:2px solid #d2e3eb;padding-left:9px}
+.sheet.modern .credential-item{border-left-color:#abdce6}
+.sheet.classic .credential-label,.sheet.modern .credential-label{font:700 11px/1.3 Arial,sans-serif;color:#31566c;margin:0 0 3px}
+.sheet.modern .credential-label{color:#0b7a92}
+.sheet.classic .credential-item p,.sheet.modern .credential-item p{font-size:11px;line-height:1.35;margin:0 0 3px;white-space:pre-wrap;overflow-wrap:anywhere}
 </style></head><body><div id="copilot-helper" class="hidden" role="dialog" aria-modal="true" aria-label="Microsoft Copilot CV extraction" style="position:fixed;inset:0;z-index:1002;background:#132b42b0;display:flex;align-items:center;justify-content:center;padding:12px"><div style="background:white;border-radius:12px;padding:20px;width:min(760px,100%);max-height:90vh;overflow:auto"><h2>Extract CV using Microsoft 365 Copilot</h2><p class="hint">1. Copy the prompt. 2. Open Copilot using your organisation account. 3. Upload your DOCX or PDF and paste the prompt. 4. Save Copilot's JSON response as a .json file, then use Import data in this builder. Copilot does not receive your CV automatically from this page.</p><textarea id="copilot-cv-prompt" readonly spellcheck="false" style="height:300px;font:12px/1.5 monospace"></textarea><div class="toolbar" style="margin-top:12px"><button onclick="copyCopilotPrompt()">Copy prompt</button><button class="secondary" onclick="window.open('https://copilot.cloud.microsoft/chat','_blank','noopener,noreferrer')">Open Microsoft 365 Copilot ↗</button><button class="secondary" onclick="document.getElementById('copilot-helper').classList.add('hidden')">Close</button></div></div></div><div id="cv-extract-overlay" class="hidden" style="position:fixed;inset:0;z-index:1000;background:#152d44a8;display:flex;align-items:center;justify-content:center;padding:12px"><div style="background:white;border-radius:12px;padding:20px;width:min(740px,100%);max-height:90vh;overflow:auto"><h2>Review extracted CV JSON</h2><p class="hint">Local text extraction is approximate. Check and edit every field before using. Scanned PDFs need OCR.</p><textarea id="cv-extract-json" spellcheck="false" style="height:360px;font:12px monospace"></textarea><div class="toolbar" style="margin-top:12px"><button onclick="applyCVExtract()">Use in CV Builder</button><button class="secondary" onclick="downloadCVExtract()">Download JSON</button><button class="secondary" onclick="closeCVExtract()">Cancel</button></div></div></div>
 <header class="app-header">
  <div class="app-brand"><b>CV Template Builder</b><small>Structured CV entry, template selection and downloadable outputs</small></div>
@@ -1004,10 +1014,20 @@ const projects=data.projects.map(x=>{
 }).join('');
 const summary=block('Suitability to the role',data.suitability?'<p>'+esc(data.suitability)+'</p>':'')+block('Relevance of experience',data.relevance?'<p>'+esc(data.relevance)+'</p>':'');
 const credentials=block('Professional memberships',lines(data.memberships))+block('Qualifications',lines(data.qualifications))+block('Certifications',lines(data.certifications))+block('Areas of practice',lines(data.practice))+block('Role on this project',data.projectRole?'<p>'+esc(data.projectRole)+'</p>':'');
+const credentialItems=[
+ ['Professional memberships',lines(data.memberships)],
+ ['Qualifications',lines(data.qualifications)],
+ ['Certifications',lines(data.certifications)],
+ ['Areas of practice',lines(data.practice)],
+ ['Role on this project',data.projectRole?'<p>'+esc(data.projectRole)+'</p>':'']
+].filter(([,content])=>content);
+const compactCredentials=credentialItems.length?'<section class="compact-credentials"><h3>Credentials</h3><div class="credentials-grid">'+
+ credentialItems.map(([label,content])=>'<div class="credential-item"><div class="credential-label">'+label+'</div>'+content+'</div>').join('')+
+ '</div></section>':'';
 const identity='<h1>'+esc(data.name||'Candidate name')+'</h1><div class="role">'+esc(data.role||'Professional role')+'</div><p class="meta">'+esc(approvedEmail(data.email)?data.email:'')+'</p>'+printPersonalContactMarkup();
 const years=data.years?'<p><b>'+esc(data.years)+'</b> years of experience</p>':'';
 const history=block('Work history',work)+block('Education',education)+block('Project experience',projects);
-let body=data.template==='cowi'?identity+'<div class="sidegrid"><aside class="left">'+years+credentials+'</aside><main>'+summary+history+'</main></div>':identity+years+summary+credentials+history;
+let body=data.template==='cowi'?identity+'<div class="sidegrid"><aside class="left">'+years+credentials+'</aside><main>'+summary+history+'</main></div>':identity+years+summary+compactCredentials+history;
 const sheet=document.getElementById('sheet');sheet.className='sheet '+(data.template==='cowi'?'cowi':data.template);sheet.innerHTML=body;paginateCV();}
 function saveDraft(){const email=promptApprovedEmail(data.email);if(email===null)return;data.email=email;localStorage.setItem(key,JSON.stringify(cleanCVData(data,false)));alert('Draft saved in this browser.')}function clearDraft(){if(!confirm('Clear all CV fields?'))return;data=blank();localStorage.removeItem(key);showTab('profile');render()}
 function downloadFile(name,content,type){let b=new Blob([content],{type});let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
@@ -1199,7 +1219,7 @@ function paginateCV(){
   const h=section.querySelector('h3');if(!h)continue;
   if(cowi&&/^(Suitability to the role|Relevance of experience)$/i.test(h.textContent.trim()))continue;
   if(pairedDone.has(section))continue;
-  if(paired.length===2&&section===paired[0]){
+  if(cowi&&paired.length===2&&section===paired[0]){
    if(!pairFits())newColumn();
    if(pairFits()){
     for(const sec of paired){column.append(sec.cloneNode(true));pairedDone.add(sec)}
