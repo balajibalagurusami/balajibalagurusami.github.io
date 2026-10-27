@@ -1482,7 +1482,15 @@ function paginateCV(){
   const clone=node.cloneNode(true);column.append(clone);
   if(fits())return;
   clone.remove();
-  if(column.children.length){newColumn();if(heading)column.append(heading.cloneNode(true))}
+  if(column.children.length){
+   // If the first entry will not fit after a section heading, move the
+   // heading with that entry. Never strand a heading/rule after Education.
+   const last=column.lastElementChild;
+   if(heading&&last&&last.tagName==='H3'&&
+      last.textContent.trim()===heading.textContent.trim())last.remove();
+   newColumn();
+   if(heading)column.append(heading.cloneNode(true));
+  }
   column.append(clone);
   if(fits())return;
   clone.remove();
