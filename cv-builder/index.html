@@ -920,12 +920,22 @@ function showInlineConfirmation(message,onConfirm){
  pendingInlineConfirmation=onConfirm;pendingWorkEmailCallback=null;
  showInlinePanel('confirm',message);
 }
+function runInlineAction(action,arg){
+ try{
+  if(typeof action!=='function')return;
+  const result=action(arg);
+  if(result&&typeof result.catch==='function')result.catch(error=>{
+   console.error('CV action failed',error);showStatus(error?.message||String(error),'error');
+  });
+ }catch(error){
+  console.error('CV action failed',error);showStatus(error?.message||String(error),'error');
+ }
+}
 function acceptInlineConfirmation(){
  const next=pendingInlineConfirmation;
  dismissInlineAction();
- if(typeof next==='function')Promise.resolve().then(next).catch(error=>{
-  console.error('Confirmed action failed',error);showStatus(error?.message||String(error),'error');
- });
+ // Run synchronously from the user's click so sandboxed embeds keep user activation.
+ runInlineAction(next);
 }
 function requestApprovedEmail(value,onValid,reason='To continue, enter a valid company email.'){
  const proposed=String(value||'').trim();
@@ -948,7 +958,7 @@ function submitInlineWorkEmail(event){
  }
  const next=pendingWorkEmailCallback;
  dismissInlineAction();
- if(typeof next==='function')Promise.resolve().then(()=>next(email)).catch(e=>showStatus(e?.message||String(e),'error'));
+ runInlineAction(next,email);
 }
 function closeCopilotHelper(){document.getElementById('copilot-helper').classList.add('hidden')}
 function safePrintCV(){
