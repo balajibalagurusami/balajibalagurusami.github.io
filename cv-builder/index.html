@@ -1213,7 +1213,8 @@ const credentialItems=[
 const compactCredentials=credentialItems.length?'<section class="compact-credentials"><h3>Credentials</h3><div class="credentials-grid">'+
  credentialItems.map(([label,content])=>'<div class="credential-item"><div class="credential-label">'+label+'</div>'+content+'</div>').join('')+
  '</div></section>':'';
-const identity='<h1>'+esc(data.name||'Candidate name')+'</h1><div class="role">'+esc(data.role||'Professional role')+'</div><p class="meta">'+esc(validEmail(data.email)?data.email:'')+'</p>'+printPersonalContactMarkup();
+const headerDetails=[data.team?'Team / package: '+String(data.team).trim():'',validEmail(data.email)?String(data.email).trim():''].filter(Boolean).join('  |  ');
+const identity='<h1>'+esc(data.name||'Candidate name')+'</h1><div class="role">'+esc(data.role||'Professional role')+'</div>'+(headerDetails?'<p class="meta">'+esc(headerDetails)+'</p>':'')+printPersonalContactMarkup();
 const years=data.years?'<p><b>'+esc(data.years)+'</b> years of experience</p>':'';
 const history=block('Work history',work)+block('Education',education)+block('Project experience',projects);
 let body=data.template==='cowi'?identity+'<div class="sidegrid"><aside class="left">'+years+credentials+'</aside><main>'+summary+history+'</main></div>':identity+years+summary+compactCredentials+history;
