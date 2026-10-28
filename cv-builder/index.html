@@ -80,6 +80,8 @@ header .app-action.is-sample:hover{background:#fff}
 .inline-status.is-warning{background:#fff8e7;border-color:#e6d2a0;color:#775923}
 .inline-workflow-panel textarea{resize:vertical}
 @media(max-width:720px){.inline-action-panel,.inline-workflow-panel,.inline-status{width:calc(100% - 20px);padding:12px}}
+/* Show feedback on screen, but never include it in browser print-to-PDF. */
+@media print{#cv-action-panel,#cv-inline-status,#copilot-helper,#cv-extract-overlay,.inline-action-panel,.inline-workflow-panel,.inline-status,[data-pdf-exclude]{display:none!important}}
 </style></head><body>
 <header class="app-header">
  <div class="app-brand"><b>CV Template Builder</b><small>Structured CV entry, template selection and downloadable outputs</small></div>
@@ -113,9 +115,9 @@ header .app-action.is-sample:hover{background:#fff}
 </header>
 <section id="cv-action-panel" class="inline-action-panel hidden" aria-label="CV action confirmation or email" aria-live="polite">
  <div id="cv-action-message" class="inline-action-message"></div>
- <form id="cv-email-form" class="hidden" onsubmit="submitInlineWorkEmail(event)">
-  <label for="cv-action-email">Company email (COWI, Arcadis or Setec)</label>
-  <input id="cv-action-email" type="email" inputmode="email" autocomplete="email" placeholder="name@cowi.com">
+ <form id="cv-email-form" class="hidden" onsubmit="submitInlineEmail(event)">
+  <label for="cv-action-email">Email address (any valid domain)</label>
+  <input id="cv-action-email" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com">
   <div id="cv-email-error" class="inline-email-error hidden" role="alert"></div>
   <div class="inline-action-buttons"><button type="submit">Continue</button><button type="button" class="secondary" onclick="dismissInlineAction()">Cancel</button></div>
  </form>
@@ -893,9 +895,9 @@ const period=x=>x.start?[x.start,x.end||'Present'].join(' to '):(x.period||'');
 const key='cv-template-builder-v1';
 const blank=()=>({template:'cowi',name:'',role:'',team:'',years:'',suitability:'',relevance:'',memberships:'',qualifications:'',certifications:'',practice:'',projectRole:'',email:'',personalEmail:'',phoneCountryCode:'+91',phoneNumber:'',includePersonalContactsInPdf:false,work:[],education:[],projects:[]});
 let data=blank(),tab='profile';
-const approvedEmail=v=>/^[^\s@]+@(?:cowi\.com|(?:[a-z0-9-]+\.)*arcadis\.com|(?:[a-z0-9-]+\.)*setec\.fr|(?:[a-z0-9-]+\.)*setec\.com)$/i.test(String(v||'').trim());
+const validEmail=v=>/^[^\s@]+@(?:[a-z0-9-]+\.)+[a-z0-9-]{2,}$/i.test(String(v||'').trim());
 let pendingInlineConfirmation=null;
-let pendingWorkEmailCallback=null;
+let pendingEmailCallback=null;
 function showStatus(message,kind='info'){
  const el=document.getElementById('cv-inline-status');
  if(!el)return;
@@ -913,11 +915,11 @@ function showInlinePanel(mode,message){
  panel.scrollIntoView?.({block:'nearest'});
 }
 function dismissInlineAction(){
- pendingInlineConfirmation=null;pendingWorkEmailCallback=null;
+ pendingInlineConfirmation=null;pendingEmailCallback=null;
  document.getElementById('cv-action-panel').classList.add('hidden');
 }
 function showInlineConfirmation(message,onConfirm){
- pendingInlineConfirmation=onConfirm;pendingWorkEmailCallback=null;
+ pendingInlineConfirmation=onConfirm;pendingEmailCallback=null;
  showInlinePanel('confirm',message);
 }
 function runInlineAction(action,arg){
@@ -937,26 +939,26 @@ function acceptInlineConfirmation(){
  // Run synchronously from the user's click so sandboxed embeds keep user activation.
  runInlineAction(next);
 }
-function requestApprovedEmail(value,onValid,reason='To continue, enter a valid company email.'){
+function requestValidEmail(value,onValid,reason='To continue, enter a valid email address.'){
  const proposed=String(value||'').trim();
- if(approvedEmail(proposed)){onValid(proposed);return;}
- pendingWorkEmailCallback=onValid;pendingInlineConfirmation=null;
- showInlinePanel('email',reason+' Only @cowi.com, Arcadis and Setec work addresses are accepted.');
+ if(validEmail(proposed)){onValid(proposed);return;}
+ pendingEmailCallback=onValid;pendingInlineConfirmation=null;
+ showInlinePanel('email',reason+' You may use any valid email domain.');
  const input=document.getElementById('cv-action-email');
  input.value=proposed;
  input.focus();
 }
-function submitInlineWorkEmail(event){
+function submitInlineEmail(event){
  event.preventDefault();
  const input=document.getElementById('cv-action-email');
  const email=input.value.trim();
- if(!approvedEmail(email)){
+ if(!validEmail(email)){
   const error=document.getElementById('cv-email-error');
-  error.textContent='Please enter a valid COWI, Arcadis or Setec company email.';
+  error.textContent='Please enter a valid email address (for example, name@example.com).';
   error.classList.remove('hidden');
   input.focus();return;
  }
- const next=pendingWorkEmailCallback;
+ const next=pendingEmailCallback;
  dismissInlineAction();
  runInlineAction(next,email);
 }
@@ -979,7 +981,7 @@ function cleanCVData(source,ask=false){
  delete d.phone;delete d.location;
  d.includePersonalContactsInPdf=d.includePersonalContactsInPdf===true;
  if(Array.isArray(d.projects))d.projects=d.projects.map(({useHyphens,...p})=>p);
- if(!approvedEmail(d.email)){
+ if(!validEmail(d.email)){
   if(!d.personalEmail&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(d.email||'').trim()))d.personalEmail=String(d.email).trim();
   d.email='';
  }
@@ -996,7 +998,7 @@ const schemas={work:[['start','Start (YYYY-MM)','month'],['end','End (YYYY-MM)',
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fld=(id,label,kind='text',wide=false)=>'<label class="field '+(wide?'wide':'')+'">'+label+(kind==='textarea'?'<textarea data-field="'+id+'">'+esc(data[id])+'</textarea>':'<input type="'+kind+'" data-field="'+id+'" value="'+esc(data[id])+'">')+'</label>';
 function showTab(t){tab=t;document.getElementById('tabs').innerHTML=sections.map(([k,v])=>'<button class="tab '+(t===k?'active':'')+'" onclick="showTab(\''+k+'\')">'+v+'</button>').join('');let html='';
-if(t==='profile')html='<div class="formgrid">'+fld('name','Full name')+fld('role','Professional title')+fld('team','Team / package')+fld('years','Years of experience')+fld('projectRole','Proposed role on this project')+fld('email','Work email (@cowi.com, Arcadis or Setec)','email')+fld('personalEmail','Personal email (optional)','email')+fld('phoneCountryCode','Country calling code (e.g. +91)','tel')+fld('phoneNumber','Phone number (optional)','tel')+'<p class="contact-help wide">Personal contact details are stored in this CV draft and JSON export, but appear in Print/PDF only if you tick the option next to Print / PDF. They are not included in DOCX exports.</p></div>';
+if(t==='profile')html='<div class="formgrid">'+fld('name','Full name')+fld('role','Professional title')+fld('team','Team / package')+fld('years','Years of experience')+fld('projectRole','Proposed role on this project')+fld('email','Email address (any domain)','email')+fld('personalEmail','Personal email (optional)','email')+fld('phoneCountryCode','Country calling code (e.g. +91)','tel')+fld('phoneNumber','Phone number (optional)','tel')+'<p class="contact-help wide">Personal contact details are stored in this CV draft and JSON export, but appear in Print/PDF only if you tick the option next to Print / PDF. </p></div>';
 if(t==='summary')html='<div class="formgrid">'+fld('suitability','Suitability to the role','textarea',true)+fld('relevance','Relevance of experience','textarea',true)+'</div>';
 if(t==='credentials')html='<div class="formgrid">'+fld('memberships','Professional memberships (one per line)','textarea',true)+fld('qualifications','Qualifications (one per line)','textarea',true)+fld('certifications','Certifications (one per line)','textarea',true)+fld('practice','Areas of practice (one per line)','textarea',true)+'</div>';
 if(schemas[t])html=(t==='work'?'<div id="work-gap-check" aria-live="polite"></div>':'')+'<p class="hint">Add as many entries as required. For projects, keep the description as a short paragraph; put each responsibility on a separate line.</p><div id="entries">'+data[t].map((x,i)=>entryHTML(t,x,i)).join('')+'</div><button onclick="addEntry()">+ Add '+(t==='work'?'employment':t==='education'?'qualification':'project')+'</button>';
@@ -1047,8 +1049,8 @@ function extractSectionJSON(text){
  x.name=(buckets.intro||[]).find(a=>/^[A-Za-z][A-Za-z .'-]{3,60}$/.test(a)&&!/^(cv|resume|curriculum vitae)$/i.test(a))||'';
  x.role=(buckets.intro||[]).slice((buckets.intro||[]).indexOf(x.name)+1).find(a=>a.length<80)||'';
  const foundEmails=text.match(/[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}/g)||[];
- x.email=foundEmails.find(approvedEmail)||'';
- x.personalEmail=foundEmails.find(v=>!approvedEmail(v))||'';
+ x.email=foundEmails.find(validEmail)||'';
+ x.personalEmail=foundEmails.find(v=>v!==x.email&&validEmail(v))||'';
  const foundPhone=text.match(/(?:^|\n)\s*(?:phone|mobile|telephone|tel|contact number)\s*[:\-]?\s*(\+\d{1,4})?[\s-]*([0-9][0-9\s().-]{5,17})/im);
  if(foundPhone){x.phoneCountryCode=foundPhone[1]||x.phoneCountryCode;x.phoneNumber=foundPhone[2].trim()}
  const years=text.match(/(\d{1,2})\s*years?\s*(?:of\s*)?experience/i);if(years)x.years=years[1];
@@ -1083,10 +1085,10 @@ function reviewedCV(){const d=JSON.parse(previewCVJSON().value);if(!d||!['work',
 function downloadCVExtract(){
  try{
   const d=reviewedCV();
-  requestApprovedEmail(d.email,email=>{
+  requestValidEmail(d.email,email=>{
    d.email=email;downloadFile('extracted-cv.json',JSON.stringify(d,null,2),'application/json');
    showStatus('Extracted CV JSON download requested.','success');
-  },'An approved company email is required to export the extracted CV JSON.');
+  },'A valid email address is required to export the extracted CV JSON.');
  }catch(e){showStatus(e.message,'error')}
 }
 function applyCVExtract(){
@@ -1094,15 +1096,15 @@ function applyCVExtract(){
   const original=JSON.parse(previewCVJSON().value);
   if(!original||!['work','education','projects'].every(k=>Array.isArray(original[k])))throw Error('Expected work, education and projects arrays.');
   const d=cleanCVData(original,false);
-  requestApprovedEmail(original.email,email=>{
+  requestValidEmail(original.email,email=>{
    d.email=email;
    showInlineConfirmation('Replace the current CV with the reviewed extracted data? Export the current JSON first if needed.',()=>{
     data=d;showTab('profile');render();persistLocalDraft('Extracted CV applied and saved.');closeCVExtract();
    });
-  },'The extracted CV needs an approved work email before applying.');
+  },'The extracted CV needs a valid email address before applying.');
  }catch(e){showStatus(e.message,'error')}
 }
-const COPILOT_CV_PROMPT="Convert the attached CV (DOCX or PDF) into one VALID JSON object for my CV Template Builder.\n\nRead the entire uploaded CV including tables, headers, work history and projects. Do NOT invent, embellish or guess details. Keep original responsibilities and descriptions as accurately as possible. Do not confuse education, jobs and projects. Represent every employment, education and project entry separately in chronological order as found. Convert dates to YYYY-MM only where month and year are explicitly supported; otherwise use empty strings and preserve date wording in the description. Leave end empty for a clearly current role.\n\nReturn ONLY raw JSON, no markdown fences, no explanation, using this exact structure:\n{\n \"template\":\"cowi\",\n \"name\":\"\",\n \"role\":\"\",\n \"team\":\"\",\n \"years\":\"\",\n \"suitability\":\"\",\n \"relevance\":\"\",\n \"memberships\":\"\",\n \"qualifications\":\"\",\n \"certifications\":\"\",\n \"practice\":\"\",\n \"projectRole\":\"\",\n \"email\":\"\",\n \"personalEmail\":\"\",\n \"phoneCountryCode\":\"\",\n \"phoneNumber\":\"\",\n \"includePersonalContactsInPdf\":false,\n \"work\":[{\"start\":\"\",\"end\":\"\",\"employer\":\"\",\"position\":\"\",\"description\":\"\"}],\n \"education\":[{\"start\":\"\",\"end\":\"\",\"institution\":\"\",\"qualification\":\"\",\"description\":\"\"}],\n \"projects\":[{\"start\":\"\",\"end\":\"\",\"title\":\"\",\"role\":\"\",\"software\":\"\",\"description\":\"\",\"responsibilities\":\"\"}]\n}\n\nSet each list to [] if absent. For fields absent from the original, use \"\". For each project, keep the original project description in \"description\" as a short paragraph without inventing or truncating facts. Put clearly stated role duties and responsibilities in \"responsibilities\" as separate lines separated by newline characters (escaped as \\\\n in JSON). Keep \"role\" as the job or project role. If the CV does not distinguish project descriptions and responsibilities, preserve the original text in \"description\" and leave \"responsibilities\" blank; do not guess. In each project, only include software actually mentioned for that project. Never include location in any field. Keep personal contact details only in personalEmail, phoneCountryCode and phoneNumber. Always set includePersonalContactsInPdf to false, so personal contacts are not printed without the user's opt-in. Email MUST be a work address ending in @cowi.com, @arcadis.com, an Arcadis subdomain, @setec.fr, @setec.com or a Setec subdomain. If no such work email is explicitly present, set email to \"\". Copy any personal email into personalEmail only, and split phone into international country calling code (for example +91) and phoneNumber, when supported by the CV. Do not put personal contact details into other fields.\n\nEnsure valid JSON, double-quoted keys and strings, no trailing commas, no comments.";
+const COPILOT_CV_PROMPT="Convert the attached CV (DOCX or PDF) into one VALID JSON object for my CV Template Builder.\n\nRead the entire uploaded CV including tables, headers, work history and projects. Do NOT invent, embellish or guess details. Keep original responsibilities and descriptions as accurately as possible. Do not confuse education, jobs and projects. Represent every employment, education and project entry separately in chronological order as found. Convert dates to YYYY-MM only where month and year are explicitly supported; otherwise use empty strings and preserve date wording in the description. Leave end empty for a clearly current role.\n\nReturn ONLY raw JSON, no markdown fences, no explanation, using this exact structure:\n{\n \"template\":\"cowi\",\n \"name\":\"\",\n \"role\":\"\",\n \"team\":\"\",\n \"years\":\"\",\n \"suitability\":\"\",\n \"relevance\":\"\",\n \"memberships\":\"\",\n \"qualifications\":\"\",\n \"certifications\":\"\",\n \"practice\":\"\",\n \"projectRole\":\"\",\n \"email\":\"\",\n \"personalEmail\":\"\",\n \"phoneCountryCode\":\"\",\n \"phoneNumber\":\"\",\n \"includePersonalContactsInPdf\":false,\n \"work\":[{\"start\":\"\",\"end\":\"\",\"employer\":\"\",\"position\":\"\",\"description\":\"\"}],\n \"education\":[{\"start\":\"\",\"end\":\"\",\"institution\":\"\",\"qualification\":\"\",\"description\":\"\"}],\n \"projects\":[{\"start\":\"\",\"end\":\"\",\"title\":\"\",\"role\":\"\",\"software\":\"\",\"description\":\"\",\"responsibilities\":\"\"}]\n}\n\nSet each list to [] if absent. For fields absent from the original, use \"\". For each project, keep the original project description in \"description\" as a short paragraph without inventing or truncating facts. Put clearly stated role duties and responsibilities in \"responsibilities\" as separate lines separated by newline characters (escaped as \\\\n in JSON). Keep \"role\" as the job or project role. If the CV does not distinguish project descriptions and responsibilities, preserve the original text in \"description\" and leave \"responsibilities\" blank; do not guess. In each project, only include software actually mentioned for that project. Never include location in any field. Keep secondary contact details only in personalEmail, phoneCountryCode and phoneNumber. Always set includePersonalContactsInPdf to false, so personal contacts are not printed without the user's opt-in. Email may use any valid domain. Put the first email explicitly present in the CV into email; if another email is supplied, put it in personalEmail. If no email is present, leave both email fields empty. Split phone into international country calling code (for example +91) and phoneNumber, when supported by the CV. Do not put phone numbers or other personal contact details into unrelated fields.\n\nEnsure valid JSON, double-quoted keys and strings, no trailing commas, no comments.";
 function openCopilotHelper(){
  document.getElementById('copilot-cv-prompt').value=COPILOT_CV_PROMPT;
  const helper=document.getElementById('copilot-helper');helper.classList.remove('hidden');helper.scrollIntoView?.({block:'nearest'});
@@ -1211,7 +1213,7 @@ const credentialItems=[
 const compactCredentials=credentialItems.length?'<section class="compact-credentials"><h3>Credentials</h3><div class="credentials-grid">'+
  credentialItems.map(([label,content])=>'<div class="credential-item"><div class="credential-label">'+label+'</div>'+content+'</div>').join('')+
  '</div></section>':'';
-const identity='<h1>'+esc(data.name||'Candidate name')+'</h1><div class="role">'+esc(data.role||'Professional role')+'</div><p class="meta">'+esc(approvedEmail(data.email)?data.email:'')+'</p>'+printPersonalContactMarkup();
+const identity='<h1>'+esc(data.name||'Candidate name')+'</h1><div class="role">'+esc(data.role||'Professional role')+'</div><p class="meta">'+esc(validEmail(data.email)?data.email:'')+'</p>'+printPersonalContactMarkup();
 const years=data.years?'<p><b>'+esc(data.years)+'</b> years of experience</p>':'';
 const history=block('Work history',work)+block('Education',education)+block('Project experience',projects);
 let body=data.template==='cowi'?identity+'<div class="sidegrid"><aside class="left">'+years+credentials+'</aside><main>'+summary+history+'</main></div>':identity+years+summary+compactCredentials+history;
@@ -1221,9 +1223,9 @@ function persistLocalDraft(message='CV draft saved in this browser.'){
  catch(e){showStatus('CV updated, but this embedded browser does not allow local storage. Export the CV data JSON to keep a backup.','warning')}
 }
 function saveDraft(){
- requestApprovedEmail(data.email,email=>{
+ requestValidEmail(data.email,email=>{
   data.email=email;render();persistLocalDraft();
- },'An approved work email is required to save the CV.');
+ },'A valid email address is required to save the CV.');
 }
 function clearDraft(){
  showInlineConfirmation('Clear all fields from this CV? You can export a JSON backup first.',()=>{
@@ -1355,6 +1357,7 @@ function addSearchableCVPage(pdf,page){
  while((node=iterator.nextNode())){
   const parent=node.parentElement,source=node.nodeValue||'';
   if(!parent||!source.trim())continue;
+  if(parent.closest('#cv-action-panel,#cv-inline-status,#copilot-helper,#cv-extract-overlay,.inline-action-panel,.inline-workflow-panel,.inline-status,[data-pdf-exclude]'))continue;
   const style=getComputedStyle(parent);
   if(style.display==='none'||style.visibility==='hidden'||style.fontSize==='0px')continue;
   const px=parseFloat(style.fontSize);
@@ -1447,11 +1450,11 @@ async function downloadCVPDF(){
 }
 
 function downloadJSON(){
- requestApprovedEmail(data.email,email=>{
+ requestValidEmail(data.email,email=>{
   data.email=email;render();
   downloadFile((data.name||'candidate').replace(/[^\w -]/g,'')+'-cv.json',JSON.stringify(cleanCVData(data,false),null,2),'application/json');
   showStatus('CV data JSON download requested.','success');
- },'An approved work email is required to export CV data.');
+ },'A valid email address is required to export CV data.');
 }
 async function importJSON(e){
  const file=e.target.files?.[0];e.target.value='';if(!file)return;
@@ -1459,20 +1462,20 @@ async function importJSON(e){
   const next=JSON.parse(await file.text());
   if(!next||typeof next!=='object'||!['projects','work','education'].every(k=>Array.isArray(next[k])))throw Error('Invalid CV JSON structure');
   const cleaned=cleanCVData(next,false);
-  requestApprovedEmail(next.email, email=>{
+  requestValidEmail(next.email, email=>{
    cleaned.email=email;
    showInlineConfirmation('Import this JSON CV? It replaces the current form and preview. Export your existing CV data first if needed.',()=>{
     data={...cleaned,template:['cowi','classic','modern'].includes(next.template)?next.template:'cowi'};
     showTab('profile');render();persistLocalDraft('CV JSON imported and saved.');
    });
-  },'The imported CV needs an approved work email before applying it.');
+  },'The imported CV needs a valid email address before applying it.');
  }catch(err){showStatus('Could not import CV: '+err.message,'error')}
 }
 
 async function exportDocx(){
  try{
-  if(!approvedEmail(data.email)){
-   requestApprovedEmail(data.email,email=>{data.email=email;render();exportDocx()},'An approved work email is required for DOCX export.');
+  if(!validEmail(data.email)){
+   requestValidEmail(data.email,email=>{data.email=email;render();exportDocx()},'A valid email address is required for DOCX export.');
    return;
   }
   if(!window.docxLite || !window.docxLite.supported()){
@@ -1494,7 +1497,7 @@ async function exportDocx(){
   };
   blocks.push({type:'title',text:data.name||'Candidate name'});
   addParagraph(data.role||'Professional role',true);
-  if(approvedEmail(data.email))addParagraph(data.email);
+  if(validEmail(data.email))addParagraph(data.email);
   if(data.years)addParagraph(data.years+' years of experience');
   section('Suitability to the Role',data.suitability);
   section('Relevance of Experience',data.relevance);
