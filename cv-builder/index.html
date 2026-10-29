@@ -36,6 +36,14 @@
 @media print{.sheet.page.cowi::after{-webkit-print-color-adjust:exact;print-color-adjust:exact}.sheet.page.cowi>.page-banner{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 .work-gap-check{border:1px solid #e9a36b;background:#fff8f0;border-radius:9px;padding:13px 15px;margin:12px 0 18px;color:#713800;font-size:13px}.work-gap-check strong{display:block;margin-bottom:5px}.work-gap-check ul{margin:6px 0;padding-left:19px}.work-gap-check.ok{background:#f1f8f3;border-color:#8fbea0;color:#245b37}.work-gap-check.info{background:#f0f6fb;border-color:#a6c7df;color:#31536d}
 .hidden{display:none!important}
+/* Cloud account action at the top-right of the application header. */
+header .header-signout{flex:0 0 auto;align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 12px;border:1px solid #aac7d3;border-radius:8px;background:#e9f3f7;color:#123c51;font:600 12px/1.2 Inter,Segoe UI,Arial,sans-serif;white-space:nowrap;cursor:pointer}
+header .header-signout:hover{background:white}
+header .header-signout:focus-visible{outline:3px solid #7bd3ff;outline-offset:3px}
+header .header-signout:disabled{opacity:.65;cursor:wait}
+header .header-signout svg{width:17px;height:17px;flex:none}
+@media(max-width:1200px){header.app-header{position:relative}header .header-signout{position:absolute;top:12px;right:15px}header.app-header:has(.header-signout:not(.hidden)) .app-brand{max-width:calc(100% - 118px)}}
+@media(max-width:500px){header .header-signout{top:10px;right:12px;padding:8px 10px;font-size:11px}}
 /* Compact icon-based CV action header */
 header.app-header{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 22px}
 header .app-brand{flex:0 0 auto}
@@ -117,6 +125,7 @@ header .app-action.is-sample:hover{background:#fff}
  </nav>
  <input id="cv-upload-file" type="file" accept=".pdf,.docx" hidden onchange="extractCVFile(event)">
  <input id="cv-import-json" type="file" accept=".json,application/json" hidden onchange="importJSON(event)">
+ <button type="button" id="header-signout" class="header-signout hidden" onclick="cloudSignOut()" aria-label="Sign out of Cloud CV drafts" title="Sign out of your cloud account. Local CV edits remain on this device."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 17l5-5-5-5m5 5H3"/><path d="M13 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5"/></svg><span>Sign out</span></button>
 </header>
 <section id="cv-action-panel" class="inline-action-panel hidden" aria-label="CV action confirmation or email" aria-live="polite">
  <div id="cv-action-message" class="inline-action-message"></div>
