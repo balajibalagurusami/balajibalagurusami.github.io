@@ -1,0 +1,3 @@
+# Keep backend source and Cloudflare configuration out of the public static site.
+cloud-api/
+.assetsignore
