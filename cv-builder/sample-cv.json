@@ -1,9 +1,11 @@
 {
+  "schemaVersion": 2,
   "template": "cowi",
   "name": "Balaji Balagurusami",
   "role": "BIM Manager",
   "team": "Heavy Civil",
   "years": "14",
+  "softwareCompetencies": "Revit\nCivil 3D\nNavisworks",
   "suitability": "Balaji is a highly skilled BIM Manager with extensive experience in driving Building Information Modeling (BIM) strategies across complex infrastructure projects. With a strong focus on ensuring the seamless implementation of BIM Execution Plans, he plays a pivotal role in maximizing project efficiency and delivering high-quality outputs.\n\nSince joining COWI in 2023, he has successfully led the BIM delivery of two major projects such as DC Water - Potomac River Tunnel and Sund &Baelt Denmark's Østlig Ringvej (Eastern Ring Road). In addition to his project responsibilities, he has been actively involved in knowledge sharing and upskilling initiatives. He has conducted training sessions for colleagues across India, Denmark, and Sweden on key topics such as BIM Coordination, Information Management, and Navisworks (Intermediate & Advanced).",
   "relevance": "He contributed first as discipline BIM Coordinator for Tunnel asset and then as overall project BIM Coordinator for all disciplines in the 3rd Limfjord Link project in Denmark, where his responsibilities are managing the iModel, creating forms and clash detection reports, controlling the ProjectWise model upload, and user access control.\n\nHis mentorship extends beyond technical skills; he has supported colleagues by sharing his experience in attaining the Autodesk Certified Professional in Revit Structure, helping them navigate the certification process effectively.\n\nSpecializing in both 3D modeling and 2D drafting, he excels in interdisciplinary collaboration, facilitating effective communication between teams and stakeholders to ensure successful project coordination. His expertise spans a wide range of BIM-related domains, including clash detection analysis, asset data integration, and interoperability through IFC standards.\n\nHis comprehensive understanding of project lifecycles allows him to lead efforts in 4D sequencing for project timelines and 5D cost analysis for budgeting purposes. His proficiency in developing and maintaining Master Information Delivery Plans ensures the structured and efficient flow of project data.\n\nBeyond technical capabilities, he is adept at team management, client relationship building, and strategic budgeting, consistently delivering results that align with organizational goals and client expectations. His commitment to innovation and excellence in BIM management makes him an invaluable asset to any project.",
   "memberships": "Engineering Technician, Member of Institution of Civil Engineers",
@@ -12,6 +14,10 @@
   "practice": "BIM - Tunnels and Underground Structures",
   "projectRole": "BIM Coordinator",
   "email": "babs@cowi.com",
+  "personalEmail": "",
+  "phoneCountryCode": "+91",
+  "phoneNumber": "",
+  "includePersonalContactsInPdf": false,
   "work": [
     {
       "period": "2026-01 to Present",
