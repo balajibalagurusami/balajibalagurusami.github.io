@@ -119,7 +119,7 @@
   perform(async()=>{
    const result=await cloudApi('/api/cvs/'+encodeURIComponent(id));
    const load=()=>{
-    data={...cleanCVData(result.cv,false),template:['cowi','classic','modern'].includes(result.cv.template)?result.cv.template:'cowi'};
+    data=cleanCVData(result.cv,false); // Apply the current versioned CV JSON schema, including legacy software competency fields.
     selectedId=result.id;selectedRevision=result.revision;selectedTitle=result.title;
     $('cloud-title').value=result.title;
     showTab('profile');render();persistLocalDraft('CV retrieved from cloud and saved locally.');
