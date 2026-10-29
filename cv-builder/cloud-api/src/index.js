@@ -6,7 +6,9 @@ const MAX_JSON=400000;
 const LIMIT_WINDOW=15*60;
 const enc=new TextEncoder();
 function json(body,status=200,headers={}) {
-  return new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...headers}});
+  const actualHeaders=new Headers({'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});
+  for(const [name,value] of new Headers(headers))actualHeaders.set(name,value);
+  return new Response(JSON.stringify(body),{status,headers:actualHeaders});
 }
 function b64(data){let str='';for(const b of data)str+=String.fromCharCode(b);return btoa(str).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'')}
 function fromB64(raw){const s=raw.replace(/-/g,'+').replace(/_/g,'/');return Uint8Array.from(atob(s+'='.repeat((4-s.length%4)%4)),c=>c.charCodeAt(0))}
@@ -29,7 +31,7 @@ function noStore(status=204){return new Response(null,{status,headers:{'Cache-Co
 async function parseBody(req,max=MAX_JSON){
   if(Number(req.headers.get('content-length')||0)>max)throw {status:413,message:'Request too large'};
   const text=await req.text();
-  if(text.length>max)throw {status:413,message:'Request too large'};
+  if(enc.encode(text).byteLength>max)throw {status:413,message:'Request too large'};
   try{return JSON.parse(text)}catch{throw {status:400,message:'Expected valid JSON'}}
 }
 function allowOrigin(request,env){
@@ -116,7 +118,7 @@ async function route(req,env,url){
     if(!body.cv||typeof body.cv!=='object'||Array.isArray(body.cv)||!Array.isArray(body.cv.projects)||!Array.isArray(body.cv.work)||!Array.isArray(body.cv.education))
       throw {status:400,message:'Invalid CV document'};
     const payload=JSON.stringify(body.cv);
-    if(payload.length>MAX_JSON)throw {status:413,message:'CV document is too large'};
+    if(enc.encode(payload).byteLength>MAX_JSON)throw {status:413,message:'CV document is too large'};
     const id=crypto.randomUUID(),ts=now(),title=safeTitle(body.title||body.cv.name);
     await env.DB.prepare('INSERT INTO cvs(id,user_id,title,cv_json,revision,created_at,updated_at) VALUES(?,?,?,?,1,?,?)')
       .bind(id,auth.user_id,title,payload,ts,ts).run();
@@ -135,7 +137,7 @@ async function route(req,env,url){
       if(!body.cv||typeof body.cv!=='object'||Array.isArray(body.cv)||!Array.isArray(body.cv.projects)||!Array.isArray(body.cv.work)||!Array.isArray(body.cv.education))
         throw {status:400,message:'Invalid CV document'};
       const payload=JSON.stringify(body.cv);
-      if(payload.length>MAX_JSON)throw {status:413,message:'CV document is too large'};
+      if(enc.encode(payload).byteLength>MAX_JSON)throw {status:413,message:'CV document is too large'};
       const ts=now(),title=safeTitle(body.title||body.cv.name),revision=Number(body.revision);
       if(!Number.isSafeInteger(revision)||revision<1)throw {status:400,message:'Revision required'};
       const result=await env.DB.prepare('UPDATE cvs SET title=?,cv_json=?,revision=revision+1,updated_at=? WHERE id=? AND user_id=? AND revision=?')
