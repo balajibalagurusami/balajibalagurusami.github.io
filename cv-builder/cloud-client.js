@@ -18,6 +18,10 @@
   $('cloud-app').classList.toggle('hidden',!ready);
   return ready;
  }
+ function syncHeaderSignOut(signedIn){
+  const action=$('header-signout');
+  if(action)action.classList.toggle('hidden',!signedIn);
+ }
  function saveSession(session){
   token=session.token;
   try{sessionStorage.setItem(storeKey,JSON.stringify({token,phone:session.phone,expiresAt:session.expiresAt}))}catch{}
@@ -29,11 +33,13 @@
   $('cloud-user').textContent='';
   $('cloud-auth').classList.remove('hidden');$('cloud-logged-in').classList.add('hidden');
   $('cloud-list').replaceChildren();
+  syncHeaderSignOut(false);
   updateActive();
  }
  function showLoggedIn(phone){
   $('cloud-auth').classList.add('hidden');$('cloud-logged-in').classList.remove('hidden');
   $('cloud-user').textContent=phone||'Signed in';
+  syncHeaderSignOut(true);
   updateActive();
  }
  function updateActive(){
@@ -133,10 +139,16 @@
   });
  }
  function signOut(){
+  const action=$('header-signout');
+  if(action?.disabled)return;
+  if(action)action.disabled=true;
   perform(async()=>{
    try{await cloudApi('/api/logout','POST')}catch{}
-   clearSession();notify('Signed out. Local CV data remains on this device.','success');
-  });
+   // Always clear the browser session even if the server cannot be reached.
+   clearSession();
+   notify('Signed out. Local CV data remains on this device.','success');
+   if(typeof showStatus==='function')showStatus('Signed out of Cloud CV drafts. Your local CV remains on this device.','success');
+  }).finally(()=>{if(action)action.disabled=false});
  }
  async function resume(){
   let s=null;try{s=JSON.parse(sessionStorage.getItem(storeKey)||'null')}catch{}
@@ -158,4 +170,7 @@
  window.cloudSignOut=signOut;
  window.cloudToggleConfirm=function(){const show=$('cloud-register-confirm').classList.toggle('hidden');$('cloud-register-note').textContent=show?'Returning to sign-in.':'Confirm your password before registering.'};
  configuration();
+ // Restore an existing cloud session when the page opens, so Sign out is visible
+ // in the header even before the Cloud drafts panel is opened.
+ void resume();
 })();
