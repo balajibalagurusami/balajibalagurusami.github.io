@@ -1,48 +1,35 @@
-# CV Builder Cloud Save (Cloudflare Worker + D1)
+# CV Builder at https://aecbim.work, with Cloudflare Worker + D1
 
-This source implements per-user drafts for the existing static GitHub Pages CV Builder.
+This is **one Cloudflare Worker deployment** that serves the existing static CV Builder at the root of `aecbim.work` **and** handles the API for phone/password accounts and cloud CV drafts. The frontend remains maintained in `cv-builder/index.html` on GitHub. It is not a new WILP site.
 
-**Deployment is NOT complete merely by committing these files.** The Cloudflare account owner must create D1, set the binding, and deploy the Worker using an authenticated Cloudflare login.
+**Important:** The repository is prepared, but Cloudflare dashboard settings, D1 migrations, and actual deployment require access to the owner's Cloudflare account. Editing GitHub alone does NOT change live DNS or deploy the Worker.
 
-## Setup once
+## Layout
 
-1. Install Node.js 20+ and authenticate Cloudflare CLI with \`npx wrangler login\`.
-2. From \`cv-builder/cloud-api\`, run \`npx wrangler d1 create cv-builder-users --location apac\`. Copy the returned database UUID into the \`database_id\` field of \`wrangler.jsonc\`. Do not invent a UUID. Cloudflare may offer to update the config automatically.
-3. Run \`npx wrangler d1 migrations apply cv-builder-users --remote\` and confirm.
-4. Run \`npx wrangler deploy\`. Copy the generated HTTPS Worker URL, for example \`https://cv-builder-cloud-api.YOUR_SUBDOMAIN.workers.dev\`.
-5. In \`cv-builder/cloud-config.js\` set \`window.CV_CLOUD_API_URL\` to the exact Worker URL (no path, no trailing slash). Commit/publish that config.
-6. In the main CV Builder, open **Cloud drafts**, create an account with a mobile number and a password of at least 12 characters, then **Save as new**. On another device, log in and **Retrieve** the saved draft.
+- Website source: `cv-builder/index.html`, `cv-builder/cloud-client.js`, `cv-builder/cloud-config.js`
+- Worker API code: `cv-builder/cloud-api/src/index.js`
+- D1 migration: `cv-builder/cloud-api/migrations/0001_init.sql`
+- Deploy config: `cv-builder/cloud-api/wrangler.jsonc`
+- `cv-builder/.assetsignore` prevents Worker server code from being published as web files.
 
-## Local development
+The Wrangler `assets.directory` is `../`, relative to `cloud-api/wrangler.jsonc`, so `cv-builder/index.html` is served at **`https://aecbim.work/`**, not `/cv-builder/`. A single Worker handles both the static files and `/api/*`. No copying the site's HTML into another repository is required.
 
-\`\`\`sh
-cd cv-builder/cloud-api
-npx wrangler d1 migrations apply cv-builder-users --local
-npx wrangler dev
-\`\`\`
+## Cloudflare dashboard deployment (no local files)
 
-Change \`ALLOWED_ORIGINS\` in \`wrangler.jsonc\` to include the exact local frontend origin when testing locally.
+1. **Do not edit or detach** `wilp.aecbim.work` or `wilptest.aecbim.work`. They are independent hostnames.
+2. In Cloudflare, go to **D1 SQL database** and open your existing **`cv-builder-users`** database. Make sure the UUID in `wrangler.jsonc` matches this database.
+3. In the database **Console**, run the content of [migrations/0001_init.sql](./migrations/0001_init.sql) to create the `users`, `sessions`, `cvs` and `login_limits` tables. It uses `CREATE TABLE IF NOT EXISTS`, so it can be rerun safely. This is the dashboard alternative to `npx wrangler d1 migrations apply cv-builder-users --remote`.
+4. In **Workers & Pages**, deploy or connect the Worker named **`cv-builder-cloud-api`** to the GitHub repository `balajibalagurusami/balajibalagurusami.github.io`, branch `main`, root directory **`cv-builder/cloud-api`**. Use **no build command** and deployment command **`npx wrangler deploy`**. Use an existing Worker of this exact name if one was previously created; do not create a second identical one.
+5. The Wrangler config requests **`aecbim.work` as its Custom Domain**, without touching WILP. If deployment reports a domain conflict, inspect the *root/apex* DNS and Worker/Pages custom-domain mapping in Cloudflare before replacing any records. Do not delete any `wilp` or `wilptest` DNS records or routes. Existing apex CNAMEs may need an intentional cutover.
+6. Verify `https://aecbim.work/` renders the CV Builder and `https://aecbim.work/health` returns `{"ok":true,"service":"cv-cloud-api"}`. Then register in **Cloud drafts**, save a CV, sign out, sign back in, and retrieve it.
+7. Optional: configure a Cloudflare **Redirect Rule** for `www.aecbim.work` -> `https://aecbim.work` (not a redirect for `wilp`). Do not add a second full website at `www`.
 
-## API
+## Security
 
-- POST /api/register \`{phone,password}\`
-- POST /api/login \`{phone,password}\`
-- GET /api/me
-- POST /api/logout
-- GET /api/cvs
-- POST /api/cvs \`{title,cv}\`
-- GET /api/cvs/:id
-- PUT /api/cvs/:id \`{title,cv,revision}\` (optimistic revision check)
-- DELETE /api/cvs/:id
-
-Authenticated routes take an \`Authorization: Bearer <session>\` header. The browser stores the session only in \`sessionStorage\` on the device; avoid browser extensions or injecting unknown scripts.
-
-## Security and limitations
-
-- No user CV or plaintext password is committed to GitHub; D1 contains CV JSON and phone numbers. Password hashes use per-user random salt and PBKDF2-SHA256 (310,000 iterations). Server stores only SHA-256 session token hashes.
-- Login/registration throttling is implemented in D1. Prefer adding Cloudflare WAF / rate limiting rules and bot protection before a public rollout.
-- **Phone number is an account identifier, not SMS-verified.** Anyone can register an unclaimed number. For real identity verification, add SMS OTP via a trusted provider before opening registration to the public.
-- Password recovery is not provided. Users must safeguard their password and export their JSON backup. Production needs an authenticated recovery mechanism and a documented data deletion/privacy policy.
-- The GitHub Pages site is public, but D1 data is accessible only after authentication and each query is scoped to the logged-in user. Use HTTPS only. Make sure the site and API are securely maintained.
-- Sessions expire after 7 days. They do not survive closing the browser tab; sign back in to retrieve work.
-- Optional personal email/phone details are part of CV JSON when users choose to enter them. Get users' consent before storing their CVs remotely.
+- For an account, enter a phone number in E.164 format (or a 10-digit India number) and a password of 12-128 characters.
+- Phone numbers are **not SMS-verified**. Do not advertise registration as phone-number ownership verification. Before a broad public launch, add SMS OTP verification, recovery, privacy and deletion policies, WAF rate limits, and proper consent.
+- Passwords are stored as individually salted PBKDF2-SHA256 hashes; sessions store a hash of bearer tokens.
+- CV JSON and personal data are stored **only in the Cloudflare D1 account**, not in GitHub.
+- Existing GitHub Pages URL `https://balajibalagurusami.github.io/cv-builder/` remains available, but its Cloud drafts panel stays inactive unless separately configured.
+- Sessions are stored only in tab-scoped `sessionStorage` and expire after seven days.
+- `ALLOWED_ORIGINS` includes the root domain and current GitHub Pages origin. Server-side origin checks are supplementary; the API still requires authenticated bearer tokens for every account-specific operation.
