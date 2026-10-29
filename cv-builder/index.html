@@ -1223,7 +1223,7 @@ const compactCredentials=credentialItems.length?'<section class="compact-credent
  '</div></section>':'';
 const headerDetails=[data.team?'Team / package: '+String(data.team).trim():'',validEmail(data.email)?String(data.email).trim():''].filter(Boolean).join('  |  ');
 const identity='<h1>'+esc(data.name||'Candidate name')+'</h1><div class="role">'+esc(data.role||'Professional role')+'</div>'+(headerDetails?'<p class="meta">'+esc(headerDetails)+'</p>':'')+printPersonalContactMarkup();
-const years=data.years?'<div class="exp-card"><span class="exp-number">'+esc(data.years)+'</span><span class="exp-label">Years’ Experience</span></div>':'';
+const years=data.years?'<p class="exp-card"><span class="exp-number">'+esc(data.years)+'</span><span class="exp-label">Years’ Experience</span></p>':'';
 const history=block('Work history',work)+block('Education',education)+block('Project experience',projects);
 let body=data.template==='cowi'?identity+'<div class="sidegrid"><aside class="left">'+years+credentials+'</aside><main>'+summary+history+'</main></div>':identity+years+summary+compactCredentials+history;
 const sheet=document.getElementById('sheet');sheet.className='sheet '+(data.template==='cowi'?'cowi':data.template);sheet.innerHTML=body;paginateCV();}
