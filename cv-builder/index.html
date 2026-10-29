@@ -155,7 +155,7 @@ header .app-action.is-sample:hover{background:#fff}
  </div>
 </section>
 <section id="cv-cloud-panel" class="inline-workflow-panel hidden" data-pdf-exclude aria-label="Cloud CV drafts"><div class="inline-workflow-card"><div class="cloud-heading"><h2>Cloud CV drafts</h2><button class="secondary" onclick="toggleCloudPanel()">Close</button></div><p class="hint">Mobile number and password login, save, and retrieve CVs across devices.</p><p id="cloud-not-ready" class="cloud-message">Cloud is not configured. Deploy the Cloudflare D1 Worker and set its URL in <code>cloud-config.js</code>. Local drafts and PDF still work.</p><div id="cloud-app" class="hidden"><p id="cloud-message" class="cloud-message" role="status"></p><div id="cloud-auth"><div class="cloud-fields"><label class="field">Mobile number<input id="cloud-phone" type="tel" placeholder="+91 98765 43210"></label><label class="field">Password (12+ characters)<input id="cloud-password" type="password" minlength="12"></label><label class="field">Confirm password for registration<input id="cloud-password-confirm" type="password" minlength="12"></label></div><p class="hint">Phone numbers are usernames, not SMS-verified.</p><button onclick="cloudLogin()">Log in</button> <button onclick="cloudRegister()">Create account</button></div><div id="cloud-logged-in" class="hidden"><p>Signed in: <strong id="cloud-user"></strong></p><label class="field">CV title<input id="cloud-title" type="text" maxlength="120"></label><div class="toolbar" style="margin:12px 0"><button onclick="cloudSaveNew()">Save as new</button><button id="cloud-save-changes" onclick="cloudSaveChanges()">Save changes</button><button class="secondary" onclick="cloudRefresh()">Refresh drafts</button><button class="secondary" onclick="cloudSignOut()">Sign out</button></div><p id="cloud-current" class="hint"></p><h3>Saved CVs</h3><div id="cloud-list" class="cloud-drafts"></div></div></div></div></section><div class="wrap"><section class="panel editor"><h2>Candidate information</h2><p class="hint">Fields save locally in this browser when you press Save draft. Use Export data to transfer a CV to another device.</p>
-<div class="formgrid"><label class="field wide">CV template<select id="template" onchange="changeTemplate(this.value)"><option value="cowi">COWI-style project CV (sample structure)</option><option value="classic">Classic professional CV</option><option value="modern">Modern compact CV</option></select></label></div>
+<div class="formgrid"><label class="field wide">CV template<select id="template" onchange="changeTemplate(this.value)"><option value="modern">Modern compact CV</option><option value="classic">Classic professional CV</option><option value="cowi">COWI-style project CV (sample structure)</option></select></label></div>
 <div class="tabs" id="tabs"></div><div id="formarea"></div><div class="toolbar" style="margin-top:16px"><button onclick="saveDraft()">Save draft</button><button class="secondary" onclick="downloadJSON()">Download JSON</button><button class="danger" onclick="clearSavedCV()">Clear saved data & preview</button></div></section>
 <section class="panel"><div class="previewTop"><div><h2>Live CV preview</h2><p class="hint" style="margin:3px 0">A4-ready. Browser Print can save directly as PDF.</p></div><div class="toolbar pdf-actions"><label class="pdf-contact-checkbox" title="Show personal email and phone in the preview and printed PDF only"><input id="pdf-personal-contact-toggle" type="checkbox" onchange="setPdfPersonalContacts(this.checked)"> <span>Include personal contact details in PDF</span></label><button onclick="safePrintCV()">Print / PDF</button></div></div><div class="preview"><article id="sheet" class="sheet"></article></div><p class="footer">The COWI-style option follows the section structure of the uploaded 7-page sample, but is an editable web recreation rather than a pixel-perfect reproduction of its Word formatting. Data remains in your browser unless you export it. Do not store confidential CVs in public GitHub repositories.</p></section></div>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.9.0/mammoth.browser.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script><script>
@@ -894,7 +894,7 @@ header .app-action.is-sample:hover{background:#fff}
 <script>
 const period=x=>x.start?[x.start,x.end||'Present'].join(' to '):(x.period||'');
 const key='cv-template-builder-v1';
-const blank=()=>({template:'cowi',name:'',role:'',team:'',years:'',suitability:'',relevance:'',memberships:'',qualifications:'',certifications:'',practice:'',projectRole:'',email:'',personalEmail:'',phoneCountryCode:'+91',phoneNumber:'',includePersonalContactsInPdf:false,work:[],education:[],projects:[]});
+const blank=()=>({template:'modern',name:'',role:'',team:'',years:'',suitability:'',relevance:'',memberships:'',qualifications:'',certifications:'',practice:'',projectRole:'',email:'',personalEmail:'',phoneCountryCode:'+91',phoneNumber:'',includePersonalContactsInPdf:false,work:[],education:[],projects:[]});
 let data=blank(),tab='profile';
 const validEmail=v=>/^[^\s@]+@(?:[a-z0-9-]+\.)+[a-z0-9-]{2,}$/i.test(String(v||'').trim());
 let pendingInlineConfirmation=null;
@@ -1154,7 +1154,7 @@ function loadSampleCV(){
    const {sample,source}=await getSampleCV();
    if(!validSampleCV(sample))throw Error('Sample JSON format is invalid.');
    const sanitized=cleanCVData(sample,false);
-   data={...sanitized,template:['cowi','classic','modern'].includes(sample.template)?sample.template:'cowi'};
+   data={...sanitized,template:['modern','classic','cowi'].includes(sample.template)?sample.template:'modern'};
    document.getElementById('cv-extract-json').value='';
    closeCVExtract();showTab('profile');render();
    persistLocalDraft('Sample CV loaded ('+source+') and saved.');
@@ -1472,7 +1472,7 @@ async function importJSON(e){
   requestValidEmail(next.email, email=>{
    cleaned.email=email;
    showInlineConfirmation('Import this JSON CV? It replaces the current form and preview. Export your existing CV data first if needed.',()=>{
-    data={...cleaned,template:['cowi','classic','modern'].includes(next.template)?next.template:'cowi'};
+    data={...cleaned,template:['modern','classic','cowi'].includes(next.template)?next.template:'modern'};
     showTab('profile');render();persistLocalDraft('CV JSON imported and saved.');
    });
   },'The imported CV needs a valid email address before applying it.');
