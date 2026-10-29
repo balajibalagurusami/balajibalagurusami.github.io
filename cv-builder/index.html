@@ -123,7 +123,7 @@ header .app-action.is-sample:hover{background:#fff}
    <div class="action-group-buttons" style="--action-count:3">
     <button type="button" id="download-cv-pdf" class="app-action" onclick="downloadCVPDF()" title="Download the finished CV as an A4 PDF" aria-label="Download the finished CV as an A4 PDF"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2h9l4 4v16H6z"/><path d="M15 2v5h4"/><path d="M9 12h7M9 15h7"/><path d="M12 17v3m0 0-2-2m2 2 2-2"/></svg><span>CV PDF</span></button>
     <button type="button" class="app-action " onclick="downloadJSON()" title="Export editable CV data as a JSON backup" aria-label="Export editable CV data as a JSON backup"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v4h16v-4"/></svg><span>CV data JSON</span></button>
-    <button type="button" class="app-action" onclick="downloadHTML()" title="Download a reusable CV Builder HTML file without the current CV data" aria-label="Download a reusable CV Builder HTML file without the current CV data"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/><path d="M12 12v7m0 0-4-4m4 4 4-4"/></svg><span>Builder HTML</span></button>
+    <button type="button" class="app-action" onclick="downloadHTML()" title="Download the latest deployed CV Builder HTML, including current enhancements and scripts, without your CV data" aria-label="Download the latest CV Builder HTML"><svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h9l5 5v13H5z"/><path d="M14 3v5h5"/><path d="M12 12v7m0 0-4-4m4 4 4-4"/></svg><span>Latest Builder HTML</span></button>
    </div>
   </div>
  </nav>
@@ -1269,54 +1269,94 @@ function clearDraft(){
  });
 }
 function downloadFile(name,content,type){let b=new Blob([content],{type});let a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function downloadHTML(){
+/* Always export the most recent DEPLOYED builder, not this tab's potentially stale DOM.
+   Keep the HTML portable by bundling same-origin JavaScript/CSS resources. */
+async function downloadHTML(){
+ const button=document.querySelector('button[onclick="downloadHTML()"]');
+ const label=button?.querySelector('span');
+ const originalLabel=label?.textContent||'Builder HTML';
+ if(button?.disabled)return;
+ if(button)button.disabled=true;
+ if(label)label.textContent='Getting latest';
  try{
-  // Clone the application interface and scripts, never export the candidate's current form or preview.
-  const snapshot=document.documentElement.cloneNode(true);
-  const form=snapshot.querySelector('#formarea');
-  if(form)form.replaceChildren();
-  const tabs=snapshot.querySelector('#tabs');
-  if(tabs)tabs.replaceChildren();
-  const sheet=snapshot.querySelector('#sheet');
-  if(sheet){
-   const fresh=snapshot.ownerDocument.createElement('article');
-   fresh.id='sheet';fresh.className='sheet';
-   sheet.replaceWith(fresh);
+  if(!/^https?:$/.test(location.protocol))
+   throw new Error('The latest builder cannot be checked from a local file. Open https://aecbim.work/ in your browser to download the current version.');
+  // Bypass browser caching of old application files, including when a tab was
+  // opened before the newest Cloudflare or GitHub Pages deployment.
+  const sourceURL=new URL(location.pathname||'/',location.href);
+  sourceURL.searchParams.set('_builder_export',String(Date.now()));
+  const sourceResponse=await fetch(sourceURL.href,{
+   method:'GET',cache:'no-store',credentials:'same-origin',
+   headers:{'Accept':'text/html'}
+  });
+  if(!sourceResponse.ok)throw new Error('Latest builder page returned HTTP '+sourceResponse.status);
+  const source=await sourceResponse.text();
+  const doc=new DOMParser().parseFromString(source,'text/html');
+  if(!doc.querySelector('#formarea')||!doc.querySelector('#sheet')||
+     !doc.querySelector('#template')||!source.includes('function downloadHTML()'))
+   throw new Error('The server did not return a valid CV Builder. The latest HTML was not downloaded.');
+
+  // Source HTML comes from the server, not the live editor. Clear placeholders
+  // defensively to guarantee no currently entered CV or cloud session is copied.
+  doc.querySelector('#formarea')?.replaceChildren();
+  doc.querySelector('#tabs')?.replaceChildren();
+  const preview=doc.querySelector('#sheet');
+  if(preview){preview.replaceChildren();preview.className='sheet';}
+  const cleanValues=['#copilot-cv-prompt','#cv-extract-json','#cv-action-message',
+                     '#cv-email-error','#cv-inline-status','#cloud-message'];
+  cleanValues.forEach(selector=>{
+   const el=doc.querySelector(selector);
+   if(el){if(el.matches('input,textarea'))el.value='';else el.textContent='';}
+  });
+  doc.querySelectorAll('#cv-cloud-panel,#cv-action-panel,#copilot-helper,#cv-extract-overlay').forEach(panel=>panel.classList.add('hidden'));
+  doc.querySelectorAll('input[type="password"],input[type="tel"],input[type="email"]').forEach(el=>el.removeAttribute('value'));
+  doc.querySelector('#header-signout')?.classList.add('hidden');
+
+  // Relative scripts such as cloud-client.js must be embedded. Leaving them
+  // as "./cloud-client.js" makes a downloaded single HTML file incomplete.
+  for(const asset of Array.from(doc.querySelectorAll('script[src],link[rel="stylesheet"][href]'))){
+   const script=asset.tagName==='SCRIPT';
+   const attribute=script?'src':'href';
+   const rawURL=asset.getAttribute(attribute);
+   if(!rawURL)continue;
+   const resourceURL=new URL(rawURL,sourceURL);
+   if(resourceURL.origin!==sourceURL.origin)continue; // CDN files stay external.
+   resourceURL.searchParams.set('_builder_export',String(Date.now()));
+   const response=await fetch(resourceURL.href,{cache:'no-store',credentials:'same-origin'});
+   if(!response.ok)
+    throw new Error('Could not include the latest '+rawURL+' (HTTP '+response.status+'). Please try again after deployment.');
+   let assetText=await response.text();
+   const embedded=doc.createElement(script?'script':'style');
+   if(script){
+    // Account operations require the actual hosted Cloudflare origin.
+    // A downloaded local HTML is fully editable but cannot securely log in
+    // to the D1 API from a file:// or an unrelated website.
+    if(/(?:^|\/)cloud-config\.js(?:\?.*)?$/i.test(rawURL)){
+     assetText="window.CV_CLOUD_API_URL = /^(?:www\\.)?aecbim\\.work$/i.test(location.hostname) && location.protocol === 'https:' ? location.origin : '';";
+    }
+    if(asset.hasAttribute('type'))embedded.setAttribute('type',asset.getAttribute('type'));
+    embedded.textContent=assetText.replace(/<\/script/gi,'<\\/script');
+   }else{
+    embedded.textContent=assetText.replace(/<\/style/gi,'<\\/style');
+   }
+   asset.replaceWith(embedded);
   }
-  const promptBox=snapshot.querySelector('#copilot-cv-prompt');
-  if(promptBox)promptBox.textContent='';
-  const extractedBox=snapshot.querySelector('#cv-extract-json');
-  if(extractedBox)extractedBox.textContent='';
-  for(const overlay of ['#copilot-helper','#cv-extract-overlay','#cv-action-panel']){
-   const el=snapshot.querySelector(overlay);
-   if(el)el.classList.add('hidden');
-  }
-  const actionMessage=snapshot.querySelector('#cv-action-message');
-  if(actionMessage)actionMessage.textContent='';
-  const emailMessage=snapshot.querySelector('#cv-email-error');
-  if(emailMessage)emailMessage.textContent='';
-  const actionEmail=snapshot.querySelector('#cv-action-email');
-  if(actionEmail){actionEmail.removeAttribute('value');actionEmail.value='';}
-  const inlineStatus=snapshot.querySelector('#cv-inline-status');
-  if(inlineStatus){inlineStatus.textContent='';inlineStatus.className='inline-status hidden';}
-  const personalToggle=snapshot.querySelector('#pdf-personal-contact-toggle');
-  if(personalToggle){personalToggle.removeAttribute('checked');personalToggle.checked=false;}
-  const selectedTemplate=snapshot.querySelector('#template');
-  if(selectedTemplate){
-   selectedTemplate.removeAttribute('value');
-   for(const option of selectedTemplate.options)option.removeAttribute('selected');
-  }
-  // Strip cloud modules from standalone offline HTML, which has no companion files.
-   snapshot.querySelector('#cv-cloud-panel')?.remove();
-   snapshot.querySelector('#cloud-drafts-button')?.remove();
-   snapshot.querySelector('[data-stage="save"] .action-group-buttons')?.setAttribute('style','--action-count:1');
-   snapshot.querySelectorAll('script[src="./cloud-config.js"],script[src="./cloud-client.js"]').forEach(el=>el.remove());
-   // No profile content, localStorage entries or current CV data are embedded in this HTML.
-  const html='<!doctype html>\n'+snapshot.outerHTML;
-  downloadFile('cv-template-builder-offline.html',html,'text/html;charset=utf-8');
+  const cloudNote=doc.querySelector('#cloud-not-ready');
+  if(cloudNote)cloudNote.textContent='Cloud sign-in and saved cloud drafts are available on https://aecbim.work/. Local CV editing and exports work in this downloaded file.';
+
+  const exportMeta=doc.createElement('meta');
+  exportMeta.setAttribute('name','cv-builder-source');
+  exportMeta.setAttribute('content',new URL(location.pathname||'/',location.href).href);
+  doc.head.appendChild(exportMeta);
+  const html='<!doctype html>\n'+doc.documentElement.outerHTML;
+  downloadFile('cv-builder-latest.html',html,'text/html;charset=utf-8');
+  showStatus('Downloaded the latest deployed CV Builder source, including current bundled scripts. No current CV or account data was included.','success');
  }catch(err){
-  console.error('HTML export failed',err);
-  showStatus('Could not download HTML: '+(err.message||err),'error');
+  console.error('Latest Builder HTML download failed',err);
+  showStatus('Could not download the latest Builder HTML: '+(err?.message||String(err)),'error');
+ }finally{
+  if(button)button.disabled=false;
+  if(label)label.textContent=originalLabel;
  }
 }
 
