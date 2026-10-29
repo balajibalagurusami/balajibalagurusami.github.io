@@ -11,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "cv-builder-users",
-      "database_id": "REPLACE_WITH_YOUR_ACTUAL_D1_DATABASE_UUID",
+      "database_id": "06888d93-2308-47b0-b8f5-6a2aeccbd210",
       "migrations_dir": "migrations"
     }
   ]
