@@ -5,7 +5,7 @@
   "compatibility_date": "2026-10-01",
   "workers_dev": true,
   "vars": {
-    "ALLOWED_ORIGINS": "https://balajibalagurusami.github.io"
+    "ALLOWED_ORIGINS": "https://aecbim.work,https://www.aecbim.work,https://balajibalagurusami.github.io"
   },
   "d1_databases": [
     {
@@ -13,6 +13,19 @@
       "database_name": "cv-builder-users",
       "database_id": "06888d93-2308-47b0-b8f5-6a2aeccbd210",
       "migrations_dir": "migrations"
+    }
+  ],
+  "assets": {
+    "directory": "../",
+    "run_worker_first": [
+      "/api/*",
+      "/health"
+    ]
+  },
+  "routes": [
+    {
+      "pattern": "aecbim.work",
+      "custom_domain": true
     }
   ]
 }
