@@ -1321,17 +1321,47 @@ async function downloadHTML(){
    const el=doc.querySelector(selector);
    if(el){if(el.matches('input,textarea'))el.value='';else el.textContent='';}
   });
-  doc.querySelectorAll('#cv-cloud-panel,#cv-action-panel,#copilot-helper,#cv-extract-overlay').forEach(panel=>panel.classList.add('hidden'));
+  doc.querySelectorAll('#cv-action-panel,#copilot-helper,#cv-extract-overlay').forEach(panel=>panel.classList.add('hidden'));
   doc.querySelectorAll('input[type="password"],input[type="tel"],input[type="email"]').forEach(el=>el.removeAttribute('value'));
-  doc.querySelector('#header-signout')?.classList.add('hidden');
 
-  // Relative scripts such as cloud-client.js must be embedded. Leaving them
-  // as "./cloud-client.js" makes a downloaded single HTML file incomplete.
+  // This is a local/offline edition, not an authenticated Cloud CV client.
+  // Remove every cloud account control and its dependencies entirely.
+  doc.querySelector('#cv-cloud-panel')?.remove();
+  doc.querySelector('#cloud-drafts-button')?.remove();
+  doc.querySelector('#header-signout')?.remove();
+  doc.querySelector('[data-stage="save"] .action-group-buttons')?.style.setProperty('--action-count','1');
+  doc.querySelectorAll('script[src]').forEach(asset=>{
+   const file=asset.getAttribute('src')||'';
+   if(/(?:^|\/)cloud-(?:config|client)\.js(?:[?#].*)?$/i.test(file))asset.remove();
+  });
+
+  // Add a website-only footer. It is outside the printable CV and hidden
+  // in browser Print/PDF, so it cannot appear in the candidate's CV.
+  const offlineFooter=doc.createElement('footer');
+  offlineFooter.id='offline-online-footer';
+  offlineFooter.setAttribute('data-pdf-exclude','');
+  const onlineLink=doc.createElement('a');
+  onlineLink.href='https://aecbim.work/';
+  onlineLink.target='_blank';
+  onlineLink.rel='noopener noreferrer';
+  onlineLink.textContent='Try online';
+  offlineFooter.appendChild(onlineLink);
+  doc.body.insertBefore(offlineFooter,doc.body.querySelector('script'));
+  const footerStyles=doc.createElement('style');
+  footerStyles.textContent='#offline-online-footer{max-width:1600px;margin:14px auto 26px;padding:8px 20px;text-align:center;font:12px/1.5 Inter,Segoe UI,Arial,sans-serif}#offline-online-footer a{color:#176b8e;text-decoration:underline;text-underline-offset:2px;font-weight:600}@media print{#offline-online-footer{display:none!important}}';
+  doc.head.appendChild(footerStyles);
+
+  // Preserve any non-cloud local JS/CSS dependencies in one HTML file.
   for(const asset of Array.from(doc.querySelectorAll('script[src],link[rel="stylesheet"][href]'))){
    const script=asset.tagName==='SCRIPT';
    const attribute=script?'src':'href';
    const rawURL=asset.getAttribute(attribute);
    if(!rawURL)continue;
+   // Do not embed Cloud sync code in standalone downloads, even when
+   // a future source adds the scripts in a different location.
+   if(script&&/(?:^|\/)cloud-(?:config|client)\.js(?:[?#].*)?$/i.test(rawURL)){
+    asset.remove();continue;
+   }
    const resourceURL=new URL(rawURL,sourceURL);
    if(resourceURL.origin!==sourceURL.origin)continue; // CDN files stay external.
    resourceURL.searchParams.set('_builder_export',String(Date.now()));
@@ -1341,12 +1371,6 @@ async function downloadHTML(){
    let assetText=await response.text();
    const embedded=doc.createElement(script?'script':'style');
    if(script){
-    // Account operations require the actual hosted Cloudflare origin.
-    // A downloaded local HTML is fully editable but cannot securely log in
-    // to the D1 API from a file:// or an unrelated website.
-    if(/(?:^|\/)cloud-config\.js(?:\?.*)?$/i.test(rawURL)){
-     assetText="window.CV_CLOUD_API_URL = /^(?:www\\.)?aecbim\\.work$/i.test(location.hostname) && location.protocol === 'https:' ? location.origin : '';";
-    }
     if(asset.hasAttribute('type'))embedded.setAttribute('type',asset.getAttribute('type'));
     embedded.textContent=assetText.replace(/<\/script/gi,'<\\/script');
    }else{
@@ -1354,9 +1378,6 @@ async function downloadHTML(){
    }
    asset.replaceWith(embedded);
   }
-  const cloudNote=doc.querySelector('#cloud-not-ready');
-  if(cloudNote)cloudNote.textContent='Cloud sign-in and saved cloud drafts are available on https://aecbim.work/. Local CV editing and exports work in this downloaded file.';
-
   const schemaMeta=doc.createElement('meta');
   schemaMeta.setAttribute('name','cv-json-schema-version');
   schemaMeta.setAttribute('content',String(CV_JSON_VERSION));
