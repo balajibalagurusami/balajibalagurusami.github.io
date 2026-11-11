@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
-import {IfcAPI} from './vendor/web-ifc-api.js';
+import {IfcAPI, IFCRELCONTAINEDINSPATIALSTRUCTURE} from './vendor/web-ifc-api.js';
 
 const ui = Object.fromEntries(['scene','model','status','fit','measure','clear','share'].map(id => [id, document.getElementById(id)]));
 const element = id => document.getElementById(id);
@@ -30,22 +30,38 @@ const ready = api.Init(undefined,true);
 const files = {steel:'steel.ifc.gz',full:'full.ifc.gz'};
 const ray = new THREE.Raycaster(), cursor = new THREE.Vector2();
 let modelId, selected, measuring=false, points=[], busy=false;
+const byElement=new Map();
+let items=[], selectionEdges=false, bounds;
+const plane=new THREE.Plane();
+renderer.localClippingEnabled=true;
 function release(container) {
   const geometries=new Set(), materials=new Set();
   container.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material)materials.add(o.material);});
   geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());container.clear();
 }
 function fit(){
-  const b=new THREE.Box3().setFromObject(group);
+  frame(new THREE.Box3().setFromObject(group));
+}
+function frame(b){
   if(b.isEmpty())return;
   const c=b.getCenter(new THREE.Vector3()), size=b.getSize(new THREE.Vector3()).length();
   controls.target.copy(c);camera.position.copy(c).add(new THREE.Vector3(1,.65,1).normalize().multiplyScalar(size*1.25));controls.update();
 }
 function select(mesh){
-  if(selected)selected.material=selected.userData.original;
+  for(const part of byElement.get(selected?.userData.id)||[]){
+    part.material=part.userData.original;
+    if(part.userData.edges){part.remove(part.userData.edges);part.userData.edges.geometry.dispose();part.userData.edges.material.dispose();delete part.userData.edges;}
+  }
   selected=mesh;
-  if(mesh)mesh.material=highlight;
+  for(const part of byElement.get(mesh?.userData.id)||[]){
+    part.material=highlight;
+    if(selectionEdges){
+      const edge=new THREE.LineSegments(new THREE.EdgesGeometry(part.geometry,20),new THREE.LineBasicMaterial({color:0xe0fff7,clippingPlanes:highlight.clippingPlanes}));
+      part.add(edge);part.userData.edges=edge;
+    }
+  }
   element('comment-context').textContent=mesh?'Attached to IFC #'+mesh.userData.id:'Attached to the current view.';
+  inspectElement(mesh?.userData.id);
 }
 const highlight=new THREE.MeshStandardMaterial({color:0x62e5c0,side:THREE.DoubleSide});
 function shareUrl(){
@@ -67,7 +83,7 @@ function restore(view=saved){
 async function load(initial=false){
   if(busy)return;
   busy=true;ui.model.disabled=true;ui.status.textContent='Loading model…';
-  select(null);release(group);release(marks);points=[];
+  select(null);release(group);release(marks);points=[];byElement.clear();items=[];bounds=null;drawTree();
   try{
     await ready;
     if(modelId!==undefined){api.CloseModel(modelId);modelId=undefined;}
@@ -94,10 +110,12 @@ async function load(initial=false){
         const mesh=new THREE.Mesh(geometry,materials.get(key));
         mesh.matrix.fromArray(p.flatTransformation);mesh.matrixAutoUpdate=false;
         mesh.userData={id:flat.expressID,original:mesh.material};group.add(mesh);
+        if(!byElement.has(flat.expressID))byElement.set(flat.expressID,[]);
+        byElement.get(flat.expressID).push(mesh);
       }
     });
     if(!group.children.length)throw new Error('No displayable geometry');
-    group.updateMatrixWorld(true);fit();if(initial)restore();
+    group.updateMatrixWorld(true);bounds=new THREE.Box3().setFromObject(group);indexElements();updateSection();fit();if(initial)restore();
     ui.status.textContent='Model ready'+(selected?' · IFC element #'+selected.userData.id:'');
   }catch(error){ui.status.textContent=error.message;console.error(error);}
   finally{busy=false;ui.model.disabled=false;}
@@ -109,7 +127,7 @@ renderer.domElement.addEventListener('pointerup',e=>{
   const r=renderer.domElement.getBoundingClientRect();
   cursor.set((e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2);
   ray.setFromCamera(cursor,camera);
-  const hit=ray.intersectObjects(group.children,false)[0];if(!hit)return;
+  const hit=ray.intersectObjects(group.children,false).find(hit=>hit.object.visible&&(!element('section').checked||plane.distanceToPoint(hit.point)>=0));if(!hit)return;
   if(!measuring){select(hit.object);const item=api.GetLine(modelId,hit.object.userData.id);ui.status.textContent=(item?.Name?.value||'IFC element')+' · #'+hit.object.userData.id;return;}
   points.push(hit.point.clone());
   const dot=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),new THREE.MeshBasicMaterial({color:0xffcd69,depthTest:false}));dot.position.copy(hit.point);marks.add(dot);
@@ -123,6 +141,8 @@ ui.measure.onclick=()=>{measuring=!measuring;points=[];ui.measure.setAttribute('
 ui.clear.onclick=()=>{release(marks);points=[];ui.status.textContent='Measurements cleared.';};
 ui.share.onclick=async()=>{try{await navigator.clipboard.writeText(shareUrl());ui.status.textContent='Review link copied.';}catch{window.prompt('Copy this review link',shareUrl());}};
 const commentKey='wilp:steel-model:fitted-rev-b:comments';
+const reviewEndpoint='https://wilptest.aecbim.work/api/steel-review';
+let shared=false, sharedReady=false, sharedComments=[], replyTo=null, commentPending=false;
 let comments=[];
 try {const savedComments=JSON.parse(localStorage.getItem(commentKey)||'[]'); if(Array.isArray(savedComments))comments=savedComments.filter(validComment);}
 catch {ui.status.textContent='Saved comments could not be read.';}
@@ -141,27 +161,95 @@ function saveComments(next){
 }
 function showComments(){
   const list=element('comment-list');list.replaceChildren();
-  if(!comments.length){list.textContent='No comments yet.';return;}
-  for(const item of [...comments].sort((a,b)=>Date.parse(b.date)-Date.parse(a.date))){
+  const active=shared?sharedComments:comments;
+  if(!active.length){list.textContent=shared&&!sharedReady?'':'No comments yet.';return;}
+  const parents=new Set(active.filter(item=>!item.parent).map(item=>item.id));
+  function makeCard(item){
     const card=document.createElement('article'), body=document.createElement('p'), meta=document.createElement('small'), button=document.createElement('button');
     const view=new URLSearchParams(item.view), id=view.get('element');
     body.textContent=item.text;
-    meta.textContent=new Date(item.date).toLocaleString()+' · '+(view.get('model')==='steel'?'Steel + slabs':'Full model')+(id?' · IFC #'+id:'');
+    meta.textContent=(shared?item.author+' · ':'')+new Date(item.date).toLocaleString()+' · '+(view.get('model')==='steel'?'Steel + slabs':'Full model')+(id?' · IFC #'+id:'');
     button.textContent='Go to view';
     button.onclick=async()=>{
       if(busy)return;
       if(ui.model.value!==view.get('model')){ui.model.value=view.get('model');await load();}
       if(group.children.length)restore(view);
     };
-    card.append(meta,body,button);list.append(card);
+    card.append(meta,body,button);
+    if(shared&&!item.parent){
+      const reply=document.createElement('button');reply.textContent='Reply';
+      reply.onclick=()=>{replyTo=item.id;element('comment-label').textContent='Reply to '+item.author;element('cancel-reply').hidden=false;element('comment-text').focus();};
+      card.append(' ',reply);
+    }
+    return card;
+  }
+  for(const item of [...active].filter(item=>!shared||!parents.has(item.parent)).sort((a,b)=>Date.parse(b.date)-Date.parse(a.date))){
+    const card=makeCard(item);
+    if(shared){
+      for(const reply of active.filter(r=>r.parent===item.id).sort((a,b)=>Date.parse(a.date)-Date.parse(b.date))){
+        const nested=makeCard(reply);nested.style.marginInlineStart='12px';card.append(nested);
+      }
+    }
+    list.append(card);
   }
 }
-element('comment-form').onsubmit=event=>{
+function resetReply(){
+  replyTo=null;element('comment-label').textContent='Comment on the current view';element('cancel-reply').hidden=true;
+}
+function updateCommentControls(){
+  element('shared-comments').setAttribute('aria-pressed',String(shared));
+  element('local-comments').setAttribute('aria-pressed',String(!shared));
+  element('local-actions').hidden=shared;element('shared-actions').hidden=!shared;
+  element('comment-mode-note').textContent=shared?'Visible to signed-in WILP reviewers.':'Saved in this browser. Export a review file to share comments.';
+  element('submit-comment').textContent=shared?'Post shared comment':'Add comment';
+  element('submit-comment').disabled=commentPending||(shared&&!sharedReady);
+  showComments();
+}
+async function reviewRequest(options){
+  const response=await fetch(reviewEndpoint,{credentials:'include',cache:'no-store',...options});
+  const data=await response.json().catch(()=>({}));
+  if(!response.ok)throw new Error(data.error||'Shared comments could not be reached.');
+  return data;
+}
+async function refreshShared(){
+  element('comment-error').textContent='Loading shared comments…';
+  try{
+    const data=await reviewRequest();
+    sharedComments=data.comments.filter(validComment);sharedReady=true;
+    if(shared)element('comment-error').textContent='';
+  }catch(error){
+    sharedReady=false;sharedComments=[];
+    if(shared)element('comment-error').textContent=error.message;
+  }
+  updateCommentControls();
+}
+function changeCommentMode(mode){
+  if(commentPending)return;
+  if(shared!==mode)element('comment-text').value='';
+  shared=mode;resetReply();element('comment-error').textContent='';updateCommentControls();
+  if(shared)refreshShared();
+}
+element('shared-comments').onclick=()=>changeCommentMode(true);
+element('local-comments').onclick=()=>changeCommentMode(false);
+element('refresh-comments').onclick=refreshShared;
+element('cancel-reply').onclick=resetReply;
+element('comment-form').onsubmit=async event=>{
   event.preventDefault();
   const input=element('comment-text'), text=input.value.trim();
   if(!text)return;
   if(busy||!group.children.length){ui.status.textContent='Load a model before adding a comment.';return;}
   const item={id:crypto.randomUUID(),text,date:new Date().toISOString(),view:new URL(shareUrl()).hash.slice(1)};
+  if(shared){
+    if(!sharedReady||commentPending)return;
+    commentPending=true;updateCommentControls();
+    try{
+      const {comment}=await reviewRequest({method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,view:item.view,parent:replyTo})});
+      if(!validComment(comment))throw new Error('The server returned an invalid comment.');
+      sharedComments=[comment,...sharedComments];input.value='';resetReply();element('comment-error').textContent='';
+    }catch(error){element('comment-error').textContent=error.message;}
+    finally{commentPending=false;updateCommentControls();}
+    return;
+  }
   if(saveComments([...comments,item]))input.value='';
 };
 element('export-comments').onclick=()=>{
@@ -181,5 +269,96 @@ element('comment-file').onchange=async event=>{
     if(saveComments([...merged.values()]))ui.status.textContent='Review comments imported.';
   }catch(error){ui.status.textContent=error.message;}
 };
-showComments();
+updateCommentControls();
+
+function valueOf(raw){
+  if(raw==null)return '';
+  if(Array.isArray(raw))return raw.map(valueOf).filter(Boolean).join(', ');
+  if(typeof raw==='object')return raw.value!==undefined?String(raw.value):'';
+  return String(raw);
+}
+function indexElements(){
+  const storeys=new Map();
+  const relationships=api.GetLineIDsWithType(modelId,IFCRELCONTAINEDINSPATIALSTRUCTURE);
+  for(let i=0;i<relationships.size();i++){
+    const rel=api.GetLine(modelId,relationships.get(i));
+    const structure=api.GetLine(modelId,rel.RelatingStructure.value);
+    const name=valueOf(structure.Name)||'Spatial group #'+structure.expressID;
+    for(const ref of rel.RelatedElements||[])storeys.set(ref.value,name);
+  }
+  items=[...byElement.keys()].map(id=>{
+    const line=api.GetLine(modelId,id),category=api.GetNameFromTypeCode(line.type).toUpperCase();
+    return {id,category,storey:storeys.get(id)||'Unassigned',name:valueOf(line.Name)||category};
+  });
+  drawTree();
+}
+function drawTree(){
+  const root=element('tree'),query=element('element-search').value.trim().toLowerCase();
+  root.replaceChildren();
+  const key=element('tree-group').value,groups=new Map();
+  for(const item of items){
+    if(![item.name,item.category,item.storey,String(item.id)].some(s=>s.toLowerCase().includes(query)))continue;
+    if(!groups.has(item[key]))groups.set(item[key],[]);
+    groups.get(item[key]).push(item);
+  }
+  for(const [name,entries] of [...groups].sort(([a],[b])=>a.localeCompare(b,undefined,{numeric:true}))){
+    const details=document.createElement('details'),title=document.createElement('summary');
+    title.textContent=name+' ('+entries.length+')';details.append(title);
+    details.addEventListener('toggle',()=>{
+      if(!details.open||details.children.length>1)return;
+      for(const item of entries){
+        const button=document.createElement('button');button.type='button';button.textContent=item.name+' · #'+item.id;
+        button.onclick=()=>{const parts=byElement.get(item.id);parts.forEach(p=>p.visible=true);select(parts[0]);};
+        details.append(button);
+      }
+    });
+    root.append(details);
+  }
+  if(!groups.size)root.textContent=items.length?'No matching elements.':'Load a model to browse elements.';
+}
+let inspection=0;
+async function inspectElement(id){
+  const token=++inspection,panel=element('properties');panel.replaceChildren();
+  if(id==null){panel.textContent='Select an IFC element.';return;}
+  function appendSet(title,values){
+    const details=document.createElement('details'),summary=document.createElement('summary'),list=document.createElement('dl');
+    summary.textContent=title;details.append(summary,list);details.open=true;
+    for(const [key,value] of values){
+      if(value==='')continue;
+      const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=key;dd.textContent=value;list.append(dt,dd);
+    }
+    panel.append(details);
+  }
+  try{
+    const line=api.GetLine(modelId,id);
+    appendSet('IFC attributes',[['Category',api.GetNameFromTypeCode(line.type).toUpperCase()],['Local ID',String(id)],...['GlobalId','Name','Description','ObjectType','Tag','PredefinedType'].map(k=>[k,valueOf(line[k])])]);
+    const sets=await api.properties.getPropertySets(modelId,id,true,true);
+    if(token!==inspection)return;
+    for(const set of sets){
+      const values=(set.HasProperties||set.Quantities||[]).map(p=>[valueOf(p.Name),valueOf(p.NominalValue??p.LengthValue??p.AreaValue??p.VolumeValue??p.CountValue??p.WeightValue??p.ListValues??p.EnumerationValues)]);
+      if(values.some(([,v])=>v!==''))appendSet(valueOf(set.Name)||'IFC property set',values);
+    }
+  }catch(error){
+    if(token===inspection){const note=document.createElement('p');note.textContent='Some IFC properties could not be read.';panel.append(note);}
+    console.warn(error);
+  }
+}
+function updateSection(){
+  const active=element('section').checked,axis=element('axis').value;
+  if(!bounds)return;
+  const limit=THREE.MathUtils.lerp(bounds.min[axis],bounds.max[axis],Number(element('cut').value)/100);
+  const normal=new THREE.Vector3();normal[axis]=-1;plane.set(normal,limit);
+  const materials=new Set([highlight,...group.children.map(p=>p.userData.original)]);
+  for(const p of group.children)if(p.userData.edges)materials.add(p.userData.edges.material);
+  for(const material of materials){material.clippingPlanes=active?[plane]:[];material.needsUpdate=true;}
+  element('cut-value').textContent=active?limit.toFixed(2)+' m':'';
+}
+element('element-search').oninput=drawTree;
+element('tree-group').onchange=drawTree;
+element('focus').onclick=()=>{if(selected){const box=new THREE.Box3();for(const p of byElement.get(selected.userData.id))box.expandByObject(p);frame(box);}};
+element('hide').onclick=()=>{if(selected){byElement.get(selected.userData.id).forEach(p=>p.visible=false);select(null);}};
+element('isolate').onclick=()=>{if(selected)group.children.forEach(p=>p.visible=p.userData.id===selected.userData.id);};
+element('show').onclick=()=>group.children.forEach(p=>p.visible=true);
+element('edges').onclick=()=>{selectionEdges=!selectionEdges;element('edges').setAttribute('aria-pressed',String(selectionEdges));select(selected);};
+element('section').onchange=element('axis').onchange=element('cut').oninput=updateSection;
 load(true);

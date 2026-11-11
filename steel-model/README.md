@@ -4,7 +4,11 @@ The subpage runs from the `steel-model/` directory on the WILP site. GitHub Page
 
 Choose **Steel + slabs** or **Full model with architecture**. Orbit, pan and zoom, or click to select an IFC element. **Measure** gives the straight-line distance in metres between two clicked surface points. Measurement points are picked on visible geometry and can be cleared with the toolbar.
 
-The **Comments** panel saves comments with the current model, camera and selected IFC element in browser storage. **Go to view** restores the saved viewpoint. Export and import a review JSON file to share comments with another reviewer or move them between browsers.
+The **Model browser** groups elements by IFC storey or category. Search by name, category, storey or IFC element number. Select an element to inspect IFC attributes and property sets. Fit, hide and isolate tools apply to all geometry belonging to that element. Section cuts use a movable plane along the selected axis.
+
+The **Comments** panel captures the current model, camera and selected IFC element. **Go to view** restores that viewpoint. Choose **Shared** for the WILP review thread, sign in through WILP and use **Refresh** to retrieve comments and replies. Signed-in WILP reviewers can read the shared thread. Choose **This browser** for local comments and JSON export or import.
+
+The shared endpoint is `https://wilptest.aecbim.work/api/steel-review`. Its Worker uses the existing WILP session service and the `steel_review_comments` table in WILP D1. The implementation and schema are under `backend/`.
 
 **Copy review link** records the model variant, camera position, target and selected IFC entity number in the URL. Keep each model filename and its IFC contents stable for existing review links.
 
