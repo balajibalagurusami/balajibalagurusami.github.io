@@ -15,3 +15,5 @@ The shared endpoint is `https://wilptest.aecbim.work/api/steel-review`. Its Work
 The IFC exports are the fitted Rev B models. Assets use gzip for smaller downloads and are decompressed in the browser. The viewer uses Three.js 0.187.0 and web-ifc 0.0.79. Their licenses are in `vendor/`.
 
 To preview locally, serve this directory over HTTP with a static server. For the WILP site, place the directory at the repository root and deploy it through the existing Pages workflow.
+
+In shared comments, type `@` followed by a classmate name or a BITS email. A complete BITS email can be entered directly. Automatic mention email requires an onboarded Cloudflare Email Sending domain, an `EMAIL` binding, a verified sender in `MENTION_EMAIL_FROM`, and a `MENTION_LIMIT` rate-limit binding. Notifications include the comment, a saved viewpoint link, and a JPEG of the view at posting.

@@ -26,12 +26,12 @@
 <nav aria-label="Comment storage"><button id="shared-comments" aria-pressed="false">Shared</button><button id="local-comments" aria-pressed="true">This browser</button></nav>
 <small id="comment-mode-note" class="muted"></small><small id="comment-error" role="status"></small>
 <nav id="shared-actions" hidden><span id="school-signin"></span><button id="refresh-comments">Refresh</button></nav>
-<form id="comment-form"><label for="comment-text" id="comment-label">Comment on the current view</label><textarea id="comment-text" required maxlength="4000"></textarea><small id="comment-context">Select a member to attach it.</small><button id="submit-comment">Add comment</button> <button id="cancel-reply" type="button" hidden>Cancel reply</button></form>
+<form id="comment-form"><label for="comment-text" id="comment-label">Comment on the current view</label><textarea id="comment-text" required maxlength="4000"></textarea><div id="mention-options" hidden aria-label="Mention suggestions"></div><small id="comment-context">Select a member to attach it.</small><button id="submit-comment">Add comment</button> <button id="cancel-reply" type="button" hidden>Cancel reply</button></form>
 <nav id="local-actions"><button id="export-comments">Export</button><button id="import-comments">Import</button><input id="comment-file" type="file" accept=".json" hidden></nav>
 <div id="comment-list" aria-live="polite"></div></aside>
 </div>
 <output id="status" role="status">Loading IFC viewer…</output>
 <p class="muted">Drag to orbit, scroll to zoom, and right-drag to pan. Click a member to select it. In Measure mode, click two visible surface points to measure in metres.</p>
 </main>
-<script type="module" src="./viewer.js?v=school-visibility"></script>
+<script type="module" src="./viewer.js?v=school-mentions"></script>
 </html>

@@ -168,7 +168,17 @@ function showComments(){
   function makeCard(item){
     const card=document.createElement('article'), body=document.createElement('p'), meta=document.createElement('small'), button=document.createElement('button');
     const view=new URLSearchParams(item.view), id=view.get('element');
-    body.textContent=item.text;
+    if(shared){
+      const pattern=/@[a-z0-9._%+-]+@(?:[a-z0-9-]+\.)*bits-pilani\.ac\.in(?![\w-]|\.[a-z0-9])/gi;
+      let offset=0;
+      for(const match of item.text.matchAll(pattern)){
+        const tag=document.createElement('strong');
+        tag.textContent=match[0];
+        body.append(item.text.slice(offset,match.index),tag);
+        offset=match.index+match[0].length;
+      }
+      body.append(item.text.slice(offset));
+    }else body.textContent=item.text;
     meta.textContent=(shared?item.author+' · ':'')+new Date(item.date).toLocaleString()+' · '+(view.get('model')==='steel'?'Steel + slabs':'Full model')+(id?' · IFC #'+id:'');
     button.textContent='Go to view';
     button.onclick=async()=>{
@@ -201,7 +211,7 @@ function updateCommentControls(){
   element('shared-comments').setAttribute('aria-pressed',String(shared));
   element('local-comments').setAttribute('aria-pressed',String(!shared));
   element('local-actions').hidden=shared;element('shared-actions').hidden=!shared;
-  element('comment-mode-note').textContent=shared?'Visible to signed-in WILP reviewers.':'Saved in this browser. Export a review file to share comments.';
+  element('comment-mode-note').textContent=shared?'Visible to signed-in WILP reviewers. Type @ to find a classmate or enter a full BITS email.':'Saved in this browser. Export a review file to share comments.';
   element('submit-comment').textContent=shared?'Post shared comment':'Add comment';
   element('submit-comment').disabled=commentPending||(shared&&!sharedReady);
   showComments();
@@ -262,10 +272,63 @@ async function refreshShared(){
   }
   updateCommentControls();
 }
+function captureCommentView(){
+  renderer.render(scene,camera);
+  const source=renderer.domElement, snapshot=document.createElement('canvas');
+  const scale=Math.min(1,1000/Math.max(source.width,source.height));
+  snapshot.width=Math.max(1,Math.round(source.width*scale));
+  snapshot.height=Math.max(1,Math.round(source.height*scale));
+  snapshot.getContext('2d').drawImage(source,0,0,snapshot.width,snapshot.height);
+  return snapshot.toDataURL('image/jpeg',0.72).split(',')[1];
+}
+const mentionInput=element('comment-text');
+const mentionOptions=element('mention-options');
+let mentionTimer, mentionSearch;
+function closeMentions(){
+  clearTimeout(mentionTimer);
+  mentionSearch?.abort();
+  mentionOptions.hidden=true;
+  mentionOptions.replaceChildren();
+}
+mentionInput.addEventListener('input',()=>{
+  closeMentions();
+  if(!shared||!sharedReady)return;
+  const end=mentionInput.selectionStart;
+  const match=/(?:^|\s)@([^\n@]{2,100}(?:@[^\s@]*)?)$/.exec(mentionInput.value.slice(0,end));
+  if(!match)return;
+  const start=end-match[1].length-1;
+  if(!match[1].trim())return;
+  mentionTimer=setTimeout(async()=>{
+    const search=new AbortController();
+    mentionSearch=search;
+    try{
+      const response=await fetch(reviewEndpoint+'?mention='+encodeURIComponent(match[1]),{
+        credentials:'include',cache:'no-store',signal:search.signal,
+      });
+      if(!response.ok)return;
+      const {people}=await response.json();
+      if(search.signal.aborted)return;
+      for(const {name,email} of people){
+        if(!/^[a-z0-9._%+-]+@(?:[a-z0-9-]+\.)*bits-pilani\.ac\.in$/i.test(email))continue;
+        const button=document.createElement('button');
+        button.type='button';button.textContent=name?name+' · '+email:email;
+        button.onclick=()=>{
+          mentionInput.setRangeText('@'+email+' ',start,end,'end');
+          closeMentions();mentionInput.focus();
+        };
+        mentionOptions.append(button);
+      }
+      mentionOptions.hidden=!mentionOptions.childElementCount;
+    }catch{}
+  },200);
+});
+mentionInput.addEventListener('keydown',event=>{
+  if(event.key==='Escape')closeMentions();
+});
 function changeCommentMode(mode){
   if(commentPending)return;
   if(shared!==mode)element('comment-text').value='';
-  shared=mode;resetReply();element('comment-error').textContent='';updateCommentControls();
+  closeMentions();shared=mode;resetReply();element('comment-error').textContent='';updateCommentControls();
   if(shared)refreshShared();
 }
 element('shared-comments').onclick=()=>changeCommentMode(true);
@@ -274,6 +337,7 @@ element('refresh-comments').onclick=refreshShared;
 element('cancel-reply').onclick=resetReply;
 element('comment-form').onsubmit=async event=>{
   event.preventDefault();
+  closeMentions();
   const input=element('comment-text'), text=input.value.trim();
   if(!text)return;
   if(busy||!group.children.length){ui.status.textContent='Load a model before adding a comment.';return;}
@@ -282,9 +346,10 @@ element('comment-form').onsubmit=async event=>{
     if(!sharedReady||commentPending)return;
     commentPending=true;updateCommentControls();
     try{
-      const {comment}=await reviewRequest({method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,view:item.view,parent:replyTo})});
+      const snapshot=/(?:^|\s)@[a-z0-9._%+-]+@(?:[a-z0-9-]+\.)*bits-pilani\.ac\.in(?![\w-]|\.[a-z0-9])/i.test(text)?captureCommentView():undefined;
+      const {comment,notification}=await reviewRequest({method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text,view:item.view,parent:replyTo,snapshot})});
       if(!validComment(comment))throw new Error('The server returned an invalid comment.');
-      sharedComments=[comment,...sharedComments];input.value='';resetReply();element('comment-error').textContent='';
+      sharedComments=[comment,...sharedComments];input.value='';resetReply();element('comment-error').textContent=notification||'';
     }catch(error){element('comment-error').textContent=error.message;}
     finally{commentPending=false;updateCommentControls();}
     return;
