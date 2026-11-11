@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
-import {IfcAPI, IFCRELCONTAINEDINSPATIALSTRUCTURE} from './vendor/web-ifc-api.js';
+import {IfcAPI, IFCRELCONTAINEDINSPATIALSTRUCTURE, IFCRELDEFINESBYTYPE, IFCPRESENTATIONLAYERASSIGNMENT} from './vendor/web-ifc-api.js';
 
 const ui = Object.fromEntries(['scene','model','status','fit','measure','clear','share'].map(id => [id, document.getElementById(id)]));
 const element = id => document.getElementById(id);
@@ -141,7 +141,8 @@ ui.measure.onclick=()=>{measuring=!measuring;points=[];ui.measure.setAttribute('
 ui.clear.onclick=()=>{release(marks);points=[];ui.status.textContent='Measurements cleared.';};
 ui.share.onclick=async()=>{try{await navigator.clipboard.writeText(shareUrl());ui.status.textContent='Review link copied.';}catch{window.prompt('Copy this review link',shareUrl());}};
 const commentKey='wilp:steel-model:fitted-rev-b:comments';
-const reviewEndpoint='https://wilptest.aecbim.work/api/steel-review';
+const reviewEndpoint='/api/classmates/steel-review';
+const schoolHost=element('school-signin');
 let shared=false, sharedReady=false, sharedComments=[], replyTo=null, commentPending=false;
 let comments=[];
 try {const savedComments=JSON.parse(localStorage.getItem(commentKey)||'[]'); if(Array.isArray(savedComments))comments=savedComments.filter(validComment);}
@@ -208,18 +209,56 @@ function updateCommentControls(){
 async function reviewRequest(options){
   const response=await fetch(reviewEndpoint,{credentials:'include',cache:'no-store',...options});
   const data=await response.json().catch(()=>({}));
-  if(!response.ok)throw new Error(data.error||'Shared comments could not be reached.');
+  if(!response.ok)throw Object.assign(new Error(data.error||'Shared comments could not be reached.'),{status:response.status});
   return data;
+}
+let googleScript;
+async function showSchoolSignIn(){
+  if(location.origin!=='https://wilp.aecbim.work')return;
+  googleScript??=new Promise((resolve,reject)=>{
+    const script=document.createElement('script');
+    script.src='https://accounts.google.com/gsi/client';
+    script.onload=resolve;
+    script.onerror=()=>{script.remove();googleScript=null;reject(new Error('Could not load Google sign-in.'))};
+    document.head.append(script);
+  });
+  await googleScript;
+  if(!shared||sharedReady)return;
+  window.google.accounts.id.initialize({
+    client_id:'810186188567-7a1mrhng391pmdjjtuemjefekoi9cg48.apps.googleusercontent.com',
+    hd:'wilp.bits-pilani.ac.in',
+    callback:async ({credential})=>{
+      element('comment-error').textContent='Signing in…';
+      try{
+        const response=await fetch('/api/classmates/auth/google',{
+          method:'POST',credentials:'include',headers:{'Content-Type':'text/plain;charset=UTF-8'},
+          body:JSON.stringify({credential})
+        });
+        const data=await response.json().catch(()=>({}));
+        if(!response.ok||!data.authenticated)throw new Error(data.error||'School sign-in was not accepted.');
+        if(shared)await refreshShared();
+      }catch(error){
+        if(shared)element('comment-error').textContent=error.message;
+      }
+    }
+  });
+  schoolHost.replaceChildren();
+  window.google.accounts.id.renderButton(schoolHost,{theme:'filled_black',size:'large',text:'signin_with',shape:'rectangular'});
 }
 async function refreshShared(){
   element('comment-error').textContent='Loading shared comments…';
   try{
     const data=await reviewRequest();
-    sharedComments=data.comments.filter(validComment);sharedReady=true;
+    sharedComments=data.comments.filter(validComment);sharedReady=true;schoolHost.replaceChildren();
     if(shared)element('comment-error').textContent='';
   }catch(error){
     sharedReady=false;sharedComments=[];
-    if(shared)element('comment-error').textContent=error.message;
+    if(shared){
+      element('comment-error').textContent=error.message;
+      if(error.status===401)showSchoolSignIn().catch(signInError=>{
+        if(shared&&!sharedReady)element('comment-error').textContent=signInError.message;
+      });
+    }
   }
   updateCommentControls();
 }
@@ -286,34 +325,86 @@ function indexElements(){
     const name=valueOf(structure.Name)||'Spatial group #'+structure.expressID;
     for(const ref of rel.RelatedElements||[])storeys.set(ref.value,name);
   }
+  const types=new Map(), layers=new Map();
+  function eachLine(code, visit){
+    const ids=api.GetLineIDsWithType(modelId,code);
+    for(let i=0;i<ids.size();i++)visit(api.GetLine(modelId,ids.get(i)));
+  }
+  eachLine(IFCRELDEFINESBYTYPE,rel=>{
+    const type=api.GetLine(modelId,rel.RelatingType.value);
+    const name=valueOf(type.Name)||api.GetNameFromTypeCode(type.type);
+    for(const ref of rel.RelatedObjects||[])types.set(ref.value,name);
+  });
+  eachLine(IFCPRESENTATIONLAYERASSIGNMENT,layer=>{
+    const name=valueOf(layer.Name)||'Layer #'+layer.expressID;
+    for(const ref of layer.AssignedItems||[]){
+      if(!layers.has(ref.value))layers.set(ref.value,new Set());
+      layers.get(ref.value).add(name);
+    }
+  });
+  function elementLayers(line){
+    if(!layers.size)return ['Unassigned'];
+    const names=new Set(), visited=new Set();
+    function visit(ref){
+      const id=ref?.value;
+      if(!id||visited.has(id))return;
+      visited.add(id);
+      for(const name of layers.get(id)||[])names.add(name);
+      const entity=api.GetLine(modelId,id);
+      for(const child of entity?.Representations||entity?.Items||[])visit(child);
+      if(entity?.MappingSource)visit(api.GetLine(modelId,entity.MappingSource.value)?.MappedRepresentation);
+    }
+    visit(line.Representation);
+    return names.size?[...names]:['Unassigned'];
+  }
   items=[...byElement.keys()].map(id=>{
     const line=api.GetLine(modelId,id),category=api.GetNameFromTypeCode(line.type).toUpperCase();
-    return {id,category,storey:storeys.get(id)||'Unassigned',name:valueOf(line.Name)||category};
+    return {id,category,storey:storeys.get(id)||'Unassigned',name:valueOf(line.Name)||category,type:types.get(id)||valueOf(line.ObjectType)||'Unassigned',layer:elementLayers(line)};
   });
   drawTree();
 }
+let visibilityControls=[];
+function updateVisibility(){
+  for(const {check, entries} of visibilityControls){
+    const visible=entries.filter(item=>byElement.get(item.id)?.some(part=>part.visible)).length;
+    check.checked=visible===entries.length;
+    check.indeterminate=visible>0&&visible<entries.length;
+  }
+}
 function drawTree(){
   const root=element('tree'),query=element('element-search').value.trim().toLowerCase();
-  root.replaceChildren();
+  root.replaceChildren();visibilityControls=[];
   const key=element('tree-group').value,groups=new Map();
   for(const item of items){
-    if(![item.name,item.category,item.storey,String(item.id)].some(s=>s.toLowerCase().includes(query)))continue;
-    if(!groups.has(item[key]))groups.set(item[key],[]);
-    groups.get(item[key]).push(item);
+    if(![item.name,item.category,item.storey,item.type,...item.layer,String(item.id)].some(s=>s.toLowerCase().includes(query)))continue;
+    for(const name of key==='layer'?item.layer:[item[key]]){
+      if(!groups.has(name))groups.set(name,[]);
+      groups.get(name).push(item);
+    }
   }
   for(const [name,entries] of [...groups].sort(([a],[b])=>a.localeCompare(b,undefined,{numeric:true}))){
     const details=document.createElement('details'),title=document.createElement('summary');
-    title.textContent=name+' ('+entries.length+')';details.append(title);
+    const check=document.createElement('input');
+    check.type='checkbox';check.setAttribute('aria-label','Show '+name);
+    check.addEventListener('click',event=>event.stopPropagation());
+    check.addEventListener('change',()=>{
+      for(const item of entries)byElement.get(item.id).forEach(part=>part.visible=check.checked);
+      if(selected&&!selected.visible)select(null);
+      updateVisibility();
+    });
+    visibilityControls.push({check,entries});
+    title.append(check,document.createTextNode(' '+name+' ('+entries.length+')'));details.append(title);
     details.addEventListener('toggle',()=>{
       if(!details.open||details.children.length>1)return;
       for(const item of entries){
         const button=document.createElement('button');button.type='button';button.textContent=item.name+' · #'+item.id;
-        button.onclick=()=>{const parts=byElement.get(item.id);parts.forEach(p=>p.visible=true);select(parts[0]);};
+        button.onclick=()=>{const parts=byElement.get(item.id);parts.forEach(p=>p.visible=true);select(parts[0]);updateVisibility();};
         details.append(button);
       }
     });
     root.append(details);
   }
+  updateVisibility();
   if(!groups.size)root.textContent=items.length?'No matching elements.':'Load a model to browse elements.';
 }
 let inspection=0;
@@ -356,9 +447,9 @@ function updateSection(){
 element('element-search').oninput=drawTree;
 element('tree-group').onchange=drawTree;
 element('focus').onclick=()=>{if(selected){const box=new THREE.Box3();for(const p of byElement.get(selected.userData.id))box.expandByObject(p);frame(box);}};
-element('hide').onclick=()=>{if(selected){byElement.get(selected.userData.id).forEach(p=>p.visible=false);select(null);}};
-element('isolate').onclick=()=>{if(selected)group.children.forEach(p=>p.visible=p.userData.id===selected.userData.id);};
-element('show').onclick=()=>group.children.forEach(p=>p.visible=true);
+element('hide').onclick=()=>{if(selected){byElement.get(selected.userData.id).forEach(p=>p.visible=false);select(null);updateVisibility();}};
+element('isolate').onclick=()=>{if(selected){group.children.forEach(p=>p.visible=p.userData.id===selected.userData.id);updateVisibility();}};
+element('show').onclick=()=>{group.children.forEach(p=>p.visible=true);updateVisibility();};
 element('edges').onclick=()=>{selectionEdges=!selectionEdges;element('edges').setAttribute('aria-pressed',String(selectionEdges));select(selected);};
 element('section').onchange=element('axis').onchange=element('cut').oninput=updateSection;
 load(true);

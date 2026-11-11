@@ -6,7 +6,7 @@ Choose **Steel + slabs** or **Full model with architecture**. Orbit, pan and zoo
 
 The **Model browser** groups elements by IFC storey or category. Search by name, category, storey or IFC element number. Select an element to inspect IFC attributes and property sets. Fit, hide and isolate tools apply to all geometry belonging to that element. Section cuts use a movable plane along the selected axis.
 
-The **Comments** panel captures the current model, camera and selected IFC element. **Go to view** restores that viewpoint. Choose **Shared** for the WILP review thread, sign in through WILP and use **Refresh** to retrieve comments and replies. Signed-in WILP reviewers can read the shared thread. Choose **This browser** for local comments and JSON export or import.
+The **Comments** panel captures the current model, camera and selected IFC element. **Go to view** restores that viewpoint. Choose **Shared** for the WILP review thread, sign in with your BITS WILP Google account in the viewer and use **Refresh** to retrieve comments and replies. Signed-in WILP reviewers can read the shared thread. Choose **This browser** for local comments and JSON export or import.
 
 The shared endpoint is `https://wilptest.aecbim.work/api/steel-review`. Its Worker uses the existing WILP session service and the `steel_review_comments` table in WILP D1. The implementation and schema are under `backend/`.
 

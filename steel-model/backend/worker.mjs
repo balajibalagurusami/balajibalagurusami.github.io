@@ -1,5 +1,5 @@
 const origin = 'https://wilp.aecbim.work';
-const endpoint = '/api/steel-review';
+const endpoint = '/api/classmates/steel-review';
 const headers = {
   'Access-Control-Allow-Origin': origin,
   'Access-Control-Allow-Credentials': 'true',
@@ -24,16 +24,17 @@ function validView(value) {
 export default {
   async fetch(request, env) {
     if (new URL(request.url).pathname !== endpoint) return json({error:'Not found'}, 404);
-    if (request.headers.get('Origin') !== origin) return json({error:'Open the WILP viewer to continue.'}, 403);
+    const requestOrigin = request.headers.get('Origin');
+    if (requestOrigin !== origin && (request.method !== 'GET' || requestOrigin)) return json({error:'Open the WILP viewer to continue.'}, 403);
     if (request.method === 'OPTIONS') return new Response(null, {status:204, headers});
     if (!['GET','POST'].includes(request.method)) return json({error:'Method not allowed'}, 405);
     try {
       const cookie = request.headers.get('Cookie');
-      if (!cookie) return json({error:'Sign in to WILP to use shared comments.'}, 401);
-      const auth = await env.WILP_AUTH.fetch('https://wilptest.aecbim.work/api/me', {headers:{Cookie:cookie,Origin:origin,Accept:'application/json'}});
+      if (!cookie) return json({error:'Sign in with your BITS WILP Google account to use shared comments.'}, 401);
+      const auth = await env.WILP_AUTH.fetch('https://wilp.aecbim.work/api/classmates/me', {headers:{Cookie:cookie,Origin:origin,Accept:'application/json'}});
       if (!auth.ok) return json({error:'Could not verify the WILP session.'}, auth.status === 401 ? 401 : 503);
       const session = await auth.json();
-      if (session.authenticated !== true || !session.user) return json({error:'Sign in to WILP to use shared comments.'}, 401);
+      if (session.authenticated !== true || !session.user?.email?.toLowerCase().endsWith('@wilp.bits-pilani.ac.in')) return json({error:'Sign in with your BITS WILP Google account to use shared comments.'}, 401);
       if (request.method === 'GET') {
         const rows = await env.REVIEW_DB.prepare('SELECT id, parent, author, text, view, date FROM steel_review_comments ORDER BY date DESC LIMIT 500').all();
         return json({comments:rows.results});

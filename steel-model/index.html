@@ -20,12 +20,12 @@
 .review{grid-template-columns:minmax(210px,270px) minmax(0,1fr) minmax(235px,285px)}#tree,#properties{font-size:.85rem}#tree button{display:block;width:100%;text-align:left;margin:3px 0}#tree details{padding:4px 0}#tree summary{cursor:pointer}#element-search,#tree-group{width:100%;margin-bottom:6px}#properties dl{margin:6px 0}#properties dt{color:#a7bed5}#properties dd{margin:0 0 6px;overflow-wrap:anywhere}@media(max-width:1050px){.review{grid-template-columns:minmax(200px,245px) minmax(0,1fr)}.review>aside:last-child{grid-column:1/-1;max-height:none}}@media(max-width:760px){.review{grid-template-columns:1fr}.review>aside:first-child{max-height:42vh}}
 </style>
 <div class="review">
-<aside aria-label="Model browser"><h2>Model browser</h2><label for="tree-group">Group elements by</label><select id="tree-group"><option value="storey">Storey</option><option value="category">IFC category</option></select><input id="element-search" type="search" placeholder="Name, IFC type or ID" aria-label="Search model elements"><div id="tree"></div><h2>Properties</h2><div id="properties">Select an IFC element.</div></aside>
+<aside aria-label="Model browser"><h2>Model browser</h2><label for="tree-group">Group elements by</label><select id="tree-group"><option value="storey">Storey</option><option value="category">IFC category</option><option value="type">Object type</option><option value="layer">IFC layer</option></select><input id="element-search" type="search" placeholder="Name, IFC type or ID" aria-label="Search model elements"><div id="tree"></div><h2>Properties</h2><div id="properties">Select an IFC element.</div></aside>
 <div id="scene" aria-label="Interactive IFC model"></div>
 <aside aria-labelledby="comments-title"><h2 id="comments-title">Comments</h2>
 <nav aria-label="Comment storage"><button id="shared-comments" aria-pressed="false">Shared</button><button id="local-comments" aria-pressed="true">This browser</button></nav>
 <small id="comment-mode-note" class="muted"></small><small id="comment-error" role="status"></small>
-<nav id="shared-actions" hidden><a href="/" target="_blank" rel="noopener">WILP sign-in</a><button id="refresh-comments">Refresh</button></nav>
+<nav id="shared-actions" hidden><span id="school-signin"></span><button id="refresh-comments">Refresh</button></nav>
 <form id="comment-form"><label for="comment-text" id="comment-label">Comment on the current view</label><textarea id="comment-text" required maxlength="4000"></textarea><small id="comment-context">Select a member to attach it.</small><button id="submit-comment">Add comment</button> <button id="cancel-reply" type="button" hidden>Cancel reply</button></form>
 <nav id="local-actions"><button id="export-comments">Export</button><button id="import-comments">Import</button><input id="comment-file" type="file" accept=".json" hidden></nav>
 <div id="comment-list" aria-live="polite"></div></aside>
@@ -33,5 +33,5 @@
 <output id="status" role="status">Loading IFC viewer…</output>
 <p class="muted">Drag to orbit, scroll to zoom, and right-drag to pan. Click a member to select it. In Measure mode, click two visible surface points to measure in metres.</p>
 </main>
-<script type="module" src="./viewer.js"></script>
+<script type="module" src="./viewer.js?v=school-visibility"></script>
 </html>
