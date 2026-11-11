@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Steel model review · WILP</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0d1724;color:#edf3fa;font:16px system-ui,sans-serif}header,main,footer{max-width:1440px;margin:auto;padding:18px 24px}h1{margin:8px 0;font-size:clamp(25px,4vw,42px)}a{color:#a7ddff}nav{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}button,select,input{background:#23344a;color:#fff;border:1px solid #647b97;border-radius:6px;padding:9px;font:inherit}button{cursor:pointer}button[aria-pressed=true]{background:#2b6587}#scene{height:clamp(380px,65vh,850px);background:#162739;border-radius:8px;overflow:hidden;touch-action:none}canvas{display:block}output{display:block;min-height:2em;padding:8px 0}details{padding:12px 0}p{max-width:80ch}.muted{color:#b7c9dc}
+</style>
+<script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+<header><a href="/">WILP home</a><h1>20-storey steel model</h1><div class="muted">Rev B · Fitted steel and slabs</div></header>
+<main>
+<nav aria-label="Model tools">
+<select id="model" aria-label="Model version"><option value="steel">Steel + slabs</option><option value="full">Full model with architecture</option></select>
+<button id="fit">Fit view</button><button id="measure" aria-pressed="false">Measure</button><button id="clear">Clear measurements</button><button id="share">Copy review link</button><button id="comment">Comment on GitHub</button>
+</nav>
+<div id="scene" aria-label="Interactive IFC model"></div>
+<output id="status" role="status">Loading IFC viewer…</output>
+<p class="muted">Drag to orbit, scroll to zoom, and right-drag to pan. Click a member to select it. In Measure mode, click two visible surface points to measure in metres.</p>
+<details><summary>Review comments</summary><p>Copy a review link to capture the current camera and selected IFC element. Paste the link into an existing GitHub issue, or use Comment on GitHub to open a prefilled issue. GitHub sign-in is required to submit.</p></details>
+</main>
+<script type="module" src="./viewer.js"></script>
+</html>
