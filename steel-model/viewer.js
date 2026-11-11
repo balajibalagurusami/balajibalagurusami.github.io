@@ -2,7 +2,8 @@ import * as THREE from 'three';
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {IfcAPI} from './vendor/web-ifc-api.js';
 
-const ui = Object.fromEntries(['scene','model','status','fit','measure','clear','share','comment'].map(id => [id, document.getElementById(id)]));
+const ui = Object.fromEntries(['scene','model','status','fit','measure','clear','share'].map(id => [id, document.getElementById(id)]));
+const element = id => document.getElementById(id);
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#162739');
 const camera = new THREE.PerspectiveCamera(48, 1, .05, 3000);
@@ -44,6 +45,7 @@ function select(mesh){
   if(selected)selected.material=selected.userData.original;
   selected=mesh;
   if(mesh)mesh.material=highlight;
+  element('comment-context').textContent=mesh?'Attached to IFC #'+mesh.userData.id:'Attached to the current view.';
 }
 const highlight=new THREE.MeshStandardMaterial({color:0x62e5c0,side:THREE.DoubleSide});
 function shareUrl(){
@@ -53,13 +55,13 @@ function shareUrl(){
 }
 const saved=new URLSearchParams(location.hash.slice(1));
 if(Object.hasOwn(files,saved.get('model')))ui.model.value=saved.get('model');
-function restore(){
+function restore(view=saved){
   for(const [key,v] of [['camera',camera.position],['target',controls.target]]){
-    const values=(saved.get(key)||'').split(',').map(Number);
+    const values=(view.get(key)||'').split(',').map(Number);
     if(values.length===3&&values.every(Number.isFinite))v.fromArray(values);
   }
-  const mesh=group.children.find(o=>String(o.userData.id)===saved.get('element'));
-  if(mesh)select(mesh);
+  const mesh=group.children.find(o=>String(o.userData.id)===view.get('element'));
+  select(mesh);
   controls.update();
 }
 async function load(initial=false){
@@ -120,10 +122,64 @@ ui.fit.onclick=fit;
 ui.measure.onclick=()=>{measuring=!measuring;points=[];ui.measure.setAttribute('aria-pressed',String(measuring));ui.status.textContent=measuring?'Select two surface points.':'Click an IFC element to select it.';};
 ui.clear.onclick=()=>{release(marks);points=[];ui.status.textContent='Measurements cleared.';};
 ui.share.onclick=async()=>{try{await navigator.clipboard.writeText(shareUrl());ui.status.textContent='Review link copied.';}catch{window.prompt('Copy this review link',shareUrl());}};
-ui.comment.onclick=()=>{
-  const link=new URL('https://github.com/balajibalagurusami/balajibalagurusami.github.io/issues/new');
-  link.searchParams.set('title','Steel model review'+(selected?' · IFC #'+selected.userData.id:''));
-  link.searchParams.set('body','Model viewpoint: '+shareUrl()+'\n\nReview comment:\n');
-  window.open(link,'_blank','noopener,noreferrer');
+const commentKey='wilp:steel-model:fitted-rev-b:comments';
+let comments=[];
+try {const savedComments=JSON.parse(localStorage.getItem(commentKey)||'[]'); if(Array.isArray(savedComments))comments=savedComments.filter(validComment);}
+catch {ui.status.textContent='Saved comments could not be read.';}
+function validComment(item){
+  if(!item||typeof item.id!=='string'||typeof item.text!=='string'||item.text.length>4000||
+     typeof item.view!=='string'||item.view.length>1000||typeof item.date!=='string'||!Number.isFinite(Date.parse(item.date)))return false;
+  const view=new URLSearchParams(item.view);
+  return Object.hasOwn(files,view.get('model'))&&['camera','target'].every(key=>{
+    const values=(view.get(key)||'').split(',');
+    return values.length===3&&values.every(value=>value.trim()&&Number.isFinite(Number(value)));
+  });
+}
+function saveComments(next){
+  try{localStorage.setItem(commentKey,JSON.stringify(next));comments=next;showComments();return true;}
+  catch{ui.status.textContent='Could not save comments in this browser.';return false;}
+}
+function showComments(){
+  const list=element('comment-list');list.replaceChildren();
+  if(!comments.length){list.textContent='No comments yet.';return;}
+  for(const item of [...comments].sort((a,b)=>Date.parse(b.date)-Date.parse(a.date))){
+    const card=document.createElement('article'), body=document.createElement('p'), meta=document.createElement('small'), button=document.createElement('button');
+    const view=new URLSearchParams(item.view), id=view.get('element');
+    body.textContent=item.text;
+    meta.textContent=new Date(item.date).toLocaleString()+' · '+(view.get('model')==='steel'?'Steel + slabs':'Full model')+(id?' · IFC #'+id:'');
+    button.textContent='Go to view';
+    button.onclick=async()=>{
+      if(busy)return;
+      if(ui.model.value!==view.get('model')){ui.model.value=view.get('model');await load();}
+      if(group.children.length)restore(view);
+    };
+    card.append(meta,body,button);list.append(card);
+  }
+}
+element('comment-form').onsubmit=event=>{
+  event.preventDefault();
+  const input=element('comment-text'), text=input.value.trim();
+  if(!text)return;
+  if(busy||!group.children.length){ui.status.textContent='Load a model before adding a comment.';return;}
+  const item={id:crypto.randomUUID(),text,date:new Date().toISOString(),view:new URL(shareUrl()).hash.slice(1)};
+  if(saveComments([...comments,item]))input.value='';
 };
+element('export-comments').onclick=()=>{
+  const url=URL.createObjectURL(new Blob([JSON.stringify({version:1,comments},null,2)],{type:'application/json'}));
+  const link=document.createElement('a');link.href=url;link.download='wilp-steel-review.json';link.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+element('import-comments').onclick=()=>element('comment-file').click();
+element('comment-file').onchange=async event=>{
+  const file=event.target.files[0];event.target.value='';if(!file)return;
+  try{
+    if(file.size>2_000_000)throw new Error('Review file is too large.');
+    const data=JSON.parse(await file.text());
+    if(data.version!==1||!Array.isArray(data.comments)||!data.comments.every(validComment))throw new Error('Invalid review file.');
+    const merged=new Map(comments.map(item=>[item.id,item]));
+    for(const item of data.comments)if(!merged.has(item.id))merged.set(item.id,item);
+    if(saveComments([...merged.values()]))ui.status.textContent='Review comments imported.';
+  }catch(error){ui.status.textContent=error.message;}
+};
+showComments();
 load(true);

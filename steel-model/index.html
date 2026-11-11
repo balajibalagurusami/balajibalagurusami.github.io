@@ -11,12 +11,21 @@
 <main>
 <nav aria-label="Model tools">
 <select id="model" aria-label="Model version"><option value="steel">Steel + slabs</option><option value="full">Full model with architecture</option></select>
-<button id="fit">Fit view</button><button id="measure" aria-pressed="false">Measure</button><button id="clear">Clear measurements</button><button id="share">Copy review link</button><button id="comment">Comment on GitHub</button>
+<button id="fit">Fit view</button><button id="measure" aria-pressed="false">Measure</button><button id="clear">Clear measurements</button><button id="share">Copy review link</button>
 </nav>
+<style>
+.review{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,320px);gap:12px}aside{background:#162739;padding:16px;border-radius:8px;max-height:65vh;overflow:auto}aside h2{margin:0 0 12px}textarea{width:100%;min-height:90px;background:#0d1724;color:inherit;padding:8px;border:1px solid #647b97;border-radius:6px;font:inherit}article{border-top:1px solid #647b97;padding:10px 0;overflow-wrap:anywhere}article p{white-space:pre-wrap;margin:6px 0}aside small{display:block;margin:6px 0}@media(max-width:760px){.review{grid-template-columns:1fr}aside{max-height:none}}
+</style>
+<div class="review">
 <div id="scene" aria-label="Interactive IFC model"></div>
+<aside aria-labelledby="comments-title"><h2 id="comments-title">Comments</h2>
+<form id="comment-form"><label for="comment-text">Comment on the current view</label><textarea id="comment-text" required maxlength="4000"></textarea><small id="comment-context">Select a member to attach it.</small><button>Add comment</button></form>
+<small class="muted">Saved in this browser. Export a review file to share comments.</small>
+<nav><button id="export-comments">Export</button><button id="import-comments">Import</button><input id="comment-file" type="file" accept=".json" hidden></nav>
+<div id="comment-list" aria-live="polite"></div></aside>
+</div>
 <output id="status" role="status">Loading IFC viewer…</output>
 <p class="muted">Drag to orbit, scroll to zoom, and right-drag to pan. Click a member to select it. In Measure mode, click two visible surface points to measure in metres.</p>
-<details><summary>Review comments</summary><p>Copy a review link to capture the current camera and selected IFC element. Paste the link into an existing GitHub issue, or use Comment on GitHub to open a prefilled issue. GitHub sign-in is required to submit.</p></details>
 </main>
 <script type="module" src="./viewer.js"></script>
 </html>
