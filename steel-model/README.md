@@ -17,3 +17,7 @@ The IFC exports are the fitted Rev B models. Assets use gzip for smaller downloa
 To preview locally, serve this directory over HTTP with a static server. For the WILP site, place the directory at the repository root and deploy it through the existing Pages workflow.
 
 In shared comments, type `@` followed by a classmate name or a BITS email. A complete BITS email can be entered directly. Automatic mention email requires an onboarded Cloudflare Email Sending domain, an `EMAIL` binding, a verified sender in `MENTION_EMAIL_FROM`, and a `MENTION_LIMIT` rate-limit binding. Notifications include the comment, a saved viewpoint link, and a JPEG of the view at posting.
+
+## Additional core columns
+
+Both model versions include four added E350 built-up box column stacks at grids B and C, 8 m and 16 m from grid 2 toward grid 3. Each stack has 20 segments. The Rev B drawings schedule 16 positions per storey. This update increases the model to 20 positions per storey and uses the existing core-corner section schedule provisionally. Both exports have 400 columns. The fit-up check found no steel-to-steel or steel-to-main-slab penetrations at 0.05 mm tolerance.
