@@ -95,7 +95,15 @@ const sectionBounds=new THREE.Box3();
 const sectionFaces=axes.flatMap(axis=>['min','max'].map(side=>{
   const normal=new THREE.Vector3();
   normal[axis]=side==='min'?1:-1;
-  const handle=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),new THREE.MeshBasicMaterial({color:0x7bf5dc,depthTest:false,depthWrite:false}));
+  const handle=new THREE.Group();
+  const material=new THREE.MeshBasicMaterial({color:{x:0xff5151,y:0x60e66c,z:0x529aff}[axis],depthTest:false,depthWrite:false});
+  const shaft=new THREE.Mesh(new THREE.CylinderGeometry(.26,.26,1.55,12),material);
+  shaft.position.y=.775;
+  const tip=new THREE.Mesh(new THREE.ConeGeometry(.65,.9,16),material);
+  tip.position.y=2;
+  shaft.renderOrder=tip.renderOrder=10;
+  handle.add(shaft,tip);
+  handle.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),normal.clone().negate());
   handle.renderOrder=10;
   scene.add(handle);
   return {axis,side,handle,plane:new THREE.Plane(normal)};
@@ -627,7 +635,7 @@ canvas.addEventListener('pointerdown',event=>{
   sectionPointer(event);
   const hit=ray.intersectObjects(sectionFaces.map(face=>face.handle))[0];
   if(!hit)return;
-  const face=sectionFaces.find(face=>face.handle===hit.object);
+  const face=sectionFaces.find(face=>face.handle===hit.object.parent);
   const p=face.handle.position.clone(), q=p.clone();
   q[face.axis]+=1;
   const rect=canvas.getBoundingClientRect();
