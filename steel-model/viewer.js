@@ -17,12 +17,69 @@ light.position.set(80, 150, 40);
 scene.add(light);
 const group = new THREE.Group(), marks = new THREE.Group();
 scene.add(group, marks);
+const ambientToggle=element('ambient-shadows');
+const ambientTarget=new THREE.WebGLRenderTarget(1,1,{depthTexture:new THREE.DepthTexture(1,1)});
+const ambientScene=new THREE.Scene(), ambientCamera=new THREE.Camera();
+const ambientMaterial=new THREE.ShaderMaterial({
+  uniforms:{
+    modelColor:{value:ambientTarget.texture},
+    modelDepth:{value:ambientTarget.depthTexture},
+    pixel:{value:new THREE.Vector2()},
+    nearFar:{value:new THREE.Vector2(camera.near,camera.far)},
+  },
+  depthTest:false,
+  depthWrite:false,
+  vertexShader:`
+    varying vec2 uvPosition;
+    void main(){uvPosition=uv;gl_Position=vec4(position.xy,0.,1.);}
+  `,
+  fragmentShader:`
+    varying vec2 uvPosition;
+    uniform sampler2D modelColor, modelDepth;
+    uniform vec2 pixel, nearFar;
+    float distanceAt(vec2 at){
+      float d=texture2D(modelDepth,clamp(at,vec2(0.),vec2(1.))).r;
+      return nearFar.x*nearFar.y/(nearFar.y-d*(nearFar.y-nearFar.x));
+    }
+    void main(){
+      vec4 color=texture2D(modelColor,uvPosition);
+      float center=distanceAt(uvPosition);
+      float shadow=0.;
+      if(center<nearFar.y*.99){
+        float radius=clamp(95./center,3.,18.);
+        for(int i=0;i<12;i++){
+          float angle=float(i)*2.399963;
+          vec2 direction=vec2(cos(angle),sin(angle));
+          float offset=radius*(.3+.7*float(i)/11.);
+          float delta=center-distanceAt(uvPosition+direction*pixel*offset);
+          shadow+=smoothstep(.025,.25,delta)*(1.-smoothstep(.4,2.,delta));
+        }
+      }
+      gl_FragColor=vec4(color.rgb*(1.-.55*shadow/12.),color.a);
+      #include <colorspace_fragment>
+    }
+  `,
+});
+const ambientQuad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),ambientMaterial);
+ambientQuad.frustumCulled=false;
+ambientScene.add(ambientQuad);
+function renderModel(){
+  if(!ambientToggle.checked){renderer.render(scene,camera);return;}
+  renderer.setRenderTarget(ambientTarget);
+  renderer.render(scene,camera);
+  renderer.setRenderTarget(null);
+  renderer.render(ambientScene,ambientCamera);
+}
 new ResizeObserver(() => {
   const {clientWidth:w, clientHeight:h} = ui.scene;
   if (!w || !h) return;
-  renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
+  renderer.setSize(w,h);
+  const size=renderer.getDrawingBufferSize(new THREE.Vector2());
+  ambientTarget.setSize(size.x,size.y);
+  ambientMaterial.uniforms.pixel.value.set(1/size.x,1/size.y);
+  camera.aspect=w/h; camera.updateProjectionMatrix();
 }).observe(ui.scene);
-renderer.setAnimationLoop(() => {controls.update(); for(const face of sectionFaces)if(face.handle.visible){face.handle.scale.setScalar(Math.max(.05,camera.position.distanceTo(face.handle.position)*.012));face.handle.updateMatrixWorld();} renderer.render(scene,camera);});
+renderer.setAnimationLoop(() => {controls.update(); for(const face of sectionFaces)if(face.handle.visible){face.handle.scale.setScalar(Math.max(.05,camera.position.distanceTo(face.handle.position)*.012));face.handle.updateMatrixWorld();} renderModel();});
 
 const api = new IfcAPI();
 api.SetWasmPath(new URL('./vendor/',location.href).href,true);
@@ -295,7 +352,7 @@ async function refreshShared(){
   updateCommentControls();
 }
 function captureCommentView(){
-  renderer.render(scene,camera);
+  renderModel();
   const source=renderer.domElement, snapshot=document.createElement('canvas');
   const scale=Math.min(1,1000/Math.max(source.width,source.height));
   snapshot.width=Math.max(1,Math.round(source.width*scale));

@@ -14,7 +14,7 @@
 <button id="fit">Fit view</button><button id="measure" aria-pressed="false">Measure</button><button id="clear">Clear measurements</button><button id="share">Copy review link</button>
 <button id="focus">Fit selection</button><button id="hide">Hide selected</button><button id="isolate">Isolate selected</button><button id="show">Show all</button><button id="edges" aria-pressed="false">Selection edges</button>
 </nav>
-<nav aria-label="Section box"><label><input type="checkbox" id="section"> Section box</label><button id="section-model" type="button">Box whole model</button><button id="section-selection" type="button" disabled>Box selection</button><small>Shift-click to select multiple objects. Drag a face handle to move that cut.</small></nav>
+<nav aria-label="Section box"><label><input type="checkbox" id="ambient-shadows" checked> Ambient shadows</label><label><input type="checkbox" id="section"> Section box</label><button id="section-model" type="button">Box whole model</button><button id="section-selection" type="button" disabled>Box selection</button><small>Shift-click to select multiple objects. Drag a face handle to move that cut.</small></nav>
 <style>
 [hidden]{display:none!important}.review{display:grid;grid-template-columns:minmax(0,1fr) minmax(250px,320px);gap:12px}aside{background:#162739;padding:16px;border-radius:8px;max-height:65vh;overflow:auto}aside h2{margin:0 0 12px}textarea{width:100%;min-height:90px;background:#0d1724;color:inherit;padding:8px;border:1px solid #647b97;border-radius:6px;font:inherit}article{border-top:1px solid #647b97;padding:10px 0;overflow-wrap:anywhere}article p{white-space:pre-wrap;margin:6px 0}aside small{display:block;margin:6px 0}#tree{max-height:23vh;overflow:auto;margin-bottom:14px}@media(max-width:760px){.review{grid-template-columns:1fr}aside{max-height:none}}
 .review{grid-template-columns:minmax(210px,270px) minmax(0,1fr) minmax(235px,285px)}#tree,#properties{font-size:.85rem}#tree button{display:block;width:100%;text-align:left;margin:3px 0}#tree details{padding:4px 0}#tree summary{cursor:pointer}#element-search,#tree-group{width:100%;margin-bottom:6px}#properties dl{margin:6px 0}#properties dt{color:#a7bed5}#properties dd{margin:0 0 6px;overflow-wrap:anywhere}@media(max-width:1050px){.review{grid-template-columns:minmax(200px,245px) minmax(0,1fr)}.review>aside:last-child{grid-column:1/-1;max-height:none}}@media(max-width:760px){.review{grid-template-columns:1fr}.review>aside:first-child{max-height:42vh}}
@@ -33,5 +33,5 @@
 <output id="status" role="status">Loading IFC viewer…</output>
 <p class="muted">Drag to orbit, scroll to zoom, and right-drag to pan. Click a member to select it. In Measure mode, click two visible surface points to measure in metres.</p>
 </main>
-<script type="module" src="./viewer.js?v=section-box-1"></script>
+<script type="module" src="./viewer.js?v=ambient-shadows-1"></script>
 </html>
