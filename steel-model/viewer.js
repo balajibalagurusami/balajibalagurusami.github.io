@@ -87,7 +87,7 @@ async function load(initial=false){
   try{
     await ready;
     if(modelId!==undefined){api.CloseModel(modelId);modelId=undefined;}
-    const response=await fetch('./models/'+files[ui.model.value]);
+    const response=await fetch('./models/'+files[ui.model.value]+'?v=cc-2026-11-13');
     if(!response.ok||!response.body)throw new Error('Could not download IFC ('+response.status+')');
     const data=new Uint8Array(await new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer());
     modelId=api.OpenModel(data,{COORDINATE_TO_ORIGIN:false});
