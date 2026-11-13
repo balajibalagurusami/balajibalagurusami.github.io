@@ -22,7 +22,7 @@ new ResizeObserver(() => {
   if (!w || !h) return;
   renderer.setSize(w,h); camera.aspect=w/h; camera.updateProjectionMatrix();
 }).observe(ui.scene);
-renderer.setAnimationLoop(() => {controls.update(); renderer.render(scene,camera);});
+renderer.setAnimationLoop(() => {controls.update(); for(const face of sectionFaces)if(face.handle.visible){face.handle.scale.setScalar(Math.max(.05,camera.position.distanceTo(face.handle.position)*.012));face.handle.updateMatrixWorld();} renderer.render(scene,camera);});
 
 const api = new IfcAPI();
 api.SetWasmPath(new URL('./vendor/',location.href).href,true);
@@ -32,7 +32,22 @@ const ray = new THREE.Raycaster(), cursor = new THREE.Vector2();
 let modelId, selected, measuring=false, points=[], busy=false;
 const byElement=new Map();
 let items=[], selectionEdges=false, bounds;
-const plane=new THREE.Plane();
+const selectedIds=new Set();
+const axes=['x','y','z'];
+const sectionBounds=new THREE.Box3();
+const sectionFaces=axes.flatMap(axis=>['min','max'].map(side=>{
+  const normal=new THREE.Vector3();
+  normal[axis]=side==='min'?1:-1;
+  const handle=new THREE.Mesh(new THREE.SphereGeometry(1,12,8),new THREE.MeshBasicMaterial({color:0x7bf5dc,depthTest:false,depthWrite:false}));
+  handle.renderOrder=10;
+  scene.add(handle);
+  return {axis,side,handle,plane:new THREE.Plane(normal)};
+}));
+const sectionOutline=new THREE.Box3Helper(sectionBounds,0x7bf5dc);
+scene.add(sectionOutline);
+sectionOutline.visible=false;
+sectionFaces.forEach(face=>face.handle.visible=false);
+let sectionDrag;
 renderer.localClippingEnabled=true;
 function release(container) {
   const geometries=new Set(), materials=new Set();
@@ -47,21 +62,28 @@ function frame(b){
   const c=b.getCenter(new THREE.Vector3()), size=b.getSize(new THREE.Vector3()).length();
   controls.target.copy(c);camera.position.copy(c).add(new THREE.Vector3(1,.65,1).normalize().multiplyScalar(size*1.25));controls.update();
 }
-function select(mesh){
-  for(const part of byElement.get(selected?.userData.id)||[]){
+function select(mesh, additive=false){
+  for(const id of selectedIds)for(const part of byElement.get(id)||[]){
     part.material=part.userData.original;
     if(part.userData.edges){part.remove(part.userData.edges);part.userData.edges.geometry.dispose();part.userData.edges.material.dispose();delete part.userData.edges;}
   }
-  selected=mesh;
-  for(const part of byElement.get(mesh?.userData.id)||[]){
+  const id=mesh?.userData.id;
+  if(!additive)selectedIds.clear();
+  if(id!==undefined){
+    if(additive&&selectedIds.has(id))selectedIds.delete(id);
+    else selectedIds.add(id);
+  }
+  selected=byElement.get([...selectedIds].at(-1))?.[0];
+  for(const id of selectedIds)for(const part of byElement.get(id)||[]){
     part.material=highlight;
     if(selectionEdges){
       const edge=new THREE.LineSegments(new THREE.EdgesGeometry(part.geometry,20),new THREE.LineBasicMaterial({color:0xe0fff7,clippingPlanes:highlight.clippingPlanes}));
       part.add(edge);part.userData.edges=edge;
     }
   }
-  element('comment-context').textContent=mesh?'Attached to IFC #'+mesh.userData.id:'Attached to the current view.';
-  inspectElement(mesh?.userData.id);
+  element('section-selection').disabled=!selectedIds.size;
+  element('comment-context').textContent=selected?'Attached to IFC #'+selected.userData.id:'Attached to the current view.';
+  inspectElement(selected?.userData.id);
 }
 const highlight=new THREE.MeshStandardMaterial({color:0x62e5c0,side:THREE.DoubleSide});
 function shareUrl(){
@@ -82,8 +104,8 @@ function restore(view=saved){
 }
 async function load(initial=false){
   if(busy)return;
-  busy=true;ui.model.disabled=true;ui.status.textContent='Loading model…';
-  select(null);release(group);release(marks);points=[];byElement.clear();items=[];bounds=null;drawTree();
+  busy=true;ui.model.disabled=true;ui.status.textContent='Loading modelâ€¦';
+  select(null);release(group);release(marks);points=[];byElement.clear();items=[];bounds=null;element('section').checked=false;updateSection();drawTree();
   try{
     await ready;
     if(modelId!==undefined){api.CloseModel(modelId);modelId=undefined;}
@@ -115,8 +137,8 @@ async function load(initial=false){
       }
     });
     if(!group.children.length)throw new Error('No displayable geometry');
-    group.updateMatrixWorld(true);bounds=new THREE.Box3().setFromObject(group);indexElements();updateSection();fit();if(initial)restore();
-    ui.status.textContent='Model ready'+(selected?' · IFC element #'+selected.userData.id:'');
+    group.updateMatrixWorld(true);bounds=new THREE.Box3().setFromObject(group);sectionBounds.copy(bounds);indexElements();updateSection();fit();if(initial)restore();
+    ui.status.textContent='Model ready'+(selected?' Â· IFC element #'+selected.userData.id:'');
   }catch(error){ui.status.textContent=error.message;console.error(error);}
   finally{busy=false;ui.model.disabled=false;}
 }
@@ -127,8 +149,8 @@ renderer.domElement.addEventListener('pointerup',e=>{
   const r=renderer.domElement.getBoundingClientRect();
   cursor.set((e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2);
   ray.setFromCamera(cursor,camera);
-  const hit=ray.intersectObjects(group.children,false).find(hit=>hit.object.visible&&(!element('section').checked||plane.distanceToPoint(hit.point)>=0));if(!hit)return;
-  if(!measuring){select(hit.object);const item=api.GetLine(modelId,hit.object.userData.id);ui.status.textContent=(item?.Name?.value||'IFC element')+' · #'+hit.object.userData.id;return;}
+  const hit=ray.intersectObjects(group.children,false).find(hit=>hit.object.visible&&(!element('section').checked||sectionBounds.containsPoint(hit.point)));if(!hit)return;
+  if(!measuring){select(hit.object,e.shiftKey);const item=api.GetLine(modelId,hit.object.userData.id);ui.status.textContent=(item?.Name?.value||'IFC element')+' Â· #'+hit.object.userData.id;return;}
   points.push(hit.point.clone());
   const dot=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),new THREE.MeshBasicMaterial({color:0xffcd69,depthTest:false}));dot.position.copy(hit.point);marks.add(dot);
   if(points.length===1){ui.status.textContent='Select the second measurement point.';return;}
@@ -179,7 +201,7 @@ function showComments(){
       }
       body.append(item.text.slice(offset));
     }else body.textContent=item.text;
-    meta.textContent=(shared?item.author+' · ':'')+new Date(item.date).toLocaleString()+' · '+(view.get('model')==='steel'?'Steel + slabs':'Full model')+(id?' · IFC #'+id:'');
+    meta.textContent=(shared?item.author+' Â· ':'')+new Date(item.date).toLocaleString()+' Â· '+(view.get('model')==='steel'?'Steel + slabs':'Full model')+(id?' Â· IFC #'+id:'');
     button.textContent='Go to view';
     button.onclick=async()=>{
       if(busy)return;
@@ -238,7 +260,7 @@ async function showSchoolSignIn(){
     client_id:'810186188567-7a1mrhng391pmdjjtuemjefekoi9cg48.apps.googleusercontent.com',
     hd:'wilp.bits-pilani.ac.in',
     callback:async ({credential})=>{
-      element('comment-error').textContent='Signing in…';
+      element('comment-error').textContent='Signing inâ€¦';
       try{
         const response=await fetch('/api/classmates/auth/google',{
           method:'POST',credentials:'include',headers:{'Content-Type':'text/plain;charset=UTF-8'},
@@ -256,7 +278,7 @@ async function showSchoolSignIn(){
   window.google.accounts.id.renderButton(schoolHost,{theme:'filled_black',size:'large',text:'signin_with',shape:'rectangular'});
 }
 async function refreshShared(){
-  element('comment-error').textContent='Loading shared comments…';
+  element('comment-error').textContent='Loading shared commentsâ€¦';
   try{
     const data=await reviewRequest();
     sharedComments=data.comments.filter(validComment);sharedReady=true;schoolHost.replaceChildren();
@@ -311,7 +333,7 @@ mentionInput.addEventListener('input',()=>{
       for(const {name,email} of people){
         if(!/^[a-z0-9._%+-]+@(?:[a-z0-9-]+\.)*bits-pilani\.ac\.in$/i.test(email))continue;
         const button=document.createElement('button');
-        button.type='button';button.textContent=name?name+' · '+email:email;
+        button.type='button';button.textContent=name?name+' Â· '+email:email;
         button.onclick=()=>{
           mentionInput.setRangeText('@'+email+' ',start,end,'end');
           closeMentions();mentionInput.focus();
@@ -462,8 +484,8 @@ function drawTree(){
     details.addEventListener('toggle',()=>{
       if(!details.open||details.children.length>1)return;
       for(const item of entries){
-        const button=document.createElement('button');button.type='button';button.textContent=item.name+' · #'+item.id;
-        button.onclick=()=>{const parts=byElement.get(item.id);parts.forEach(p=>p.visible=true);select(parts[0]);updateVisibility();};
+        const button=document.createElement('button');button.type='button';button.textContent=item.name+' Â· #'+item.id;
+        button.onclick=event=>{const parts=byElement.get(item.id);parts.forEach(p=>p.visible=true);select(parts[0],event.shiftKey);updateVisibility();};
         details.append(button);
       }
     });
@@ -500,21 +522,88 @@ async function inspectElement(id){
   }
 }
 function updateSection(){
-  const active=element('section').checked,axis=element('axis').value;
-  if(!bounds)return;
-  const limit=THREE.MathUtils.lerp(bounds.min[axis],bounds.max[axis],Number(element('cut').value)/100);
-  const normal=new THREE.Vector3();normal[axis]=-1;plane.set(normal,limit);
-  const materials=new Set([highlight,...group.children.map(p=>p.userData.original)]);
-  for(const p of group.children)if(p.userData.edges)materials.add(p.userData.edges.material);
-  for(const material of materials){material.clippingPlanes=active?[plane]:[];material.needsUpdate=true;}
-  element('cut-value').textContent=active?limit.toFixed(2)+' m':'';
+  const active=Boolean(bounds&&element('section').checked);
+  sectionOutline.visible=active;
+  const center=sectionBounds.getCenter(new THREE.Vector3());
+  for(const {axis,side,handle,plane} of sectionFaces){
+    handle.visible=active;
+    if(!active)continue;
+    handle.position.copy(center);
+    handle.position[axis]=sectionBounds[side][axis];
+    plane.constant=-plane.normal[axis]*handle.position[axis];
+  }
+  const planes=active?sectionFaces.map(face=>face.plane):[];
+  const materials=new Set([highlight,...group.children.map(part=>part.userData.original)]);
+  for(const part of group.children)if(part.userData.edges)materials.add(part.userData.edges.material);
+  for(const material of materials){
+    const changed=material.clippingPlanes?.length!==planes.length;
+    material.clippingPlanes=planes;
+    if(changed)material.needsUpdate=true;
+  }
 }
+function selectionBounds(){
+  const box=new THREE.Box3();
+  for(const id of selectedIds)for(const part of byElement.get(id))box.expandByObject(part);
+  return box;
+}
+function setSection(box){
+  if(!bounds||box.isEmpty())return;
+  sectionBounds.copy(box).expandByScalar(Math.max(.15,box.getSize(new THREE.Vector3()).length()*.02));
+  element('section').checked=true;
+  updateSection();
+}
+const canvas=renderer.domElement;
+function sectionPointer(event){
+  const rect=canvas.getBoundingClientRect();
+  cursor.set(2*(event.clientX-rect.left)/rect.width-1,1-2*(event.clientY-rect.top)/rect.height);
+  ray.setFromCamera(cursor,camera);
+}
+canvas.addEventListener('pointerdown',event=>{
+  if(event.button!==0||!sectionOutline.visible)return;
+  sectionPointer(event);
+  const hit=ray.intersectObjects(sectionFaces.map(face=>face.handle))[0];
+  if(!hit)return;
+  const face=sectionFaces.find(face=>face.handle===hit.object);
+  const p=face.handle.position.clone(), q=p.clone();
+  q[face.axis]+=1;
+  const rect=canvas.getBoundingClientRect();
+  p.project(camera);q.project(camera);
+  let dx=(q.x-p.x)*rect.width/2,dy=(p.y-q.y)*rect.height/2;
+  if(dx*dx+dy*dy<.25){
+    dx=0;
+    dy=-rect.height/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.position.distanceTo(face.handle.position));
+  }
+  sectionDrag={face,dx,dy,x:event.clientX,y:event.clientY,value:sectionBounds[face.side][face.axis]};
+  controls.enabled=false;
+  canvas.setPointerCapture(event.pointerId);
+  event.stopImmediatePropagation();
+},true);
+canvas.addEventListener('pointermove',event=>{
+  if(!sectionDrag)return;
+  const {face,dx,dy,x,y,value}=sectionDrag;
+  const {axis,side}=face;
+  const shift=((event.clientX-x)*dx+(event.clientY-y)*dy)/(dx*dx+dy*dy);
+  const limit=side==='min'?sectionBounds.max[axis]-.02:sectionBounds.min[axis]+.02;
+  sectionBounds[side][axis]=side==='min'?Math.min(value+shift,limit):Math.max(value+shift,limit);
+  updateSection();
+});
+function endSectionDrag(event){
+  if(!sectionDrag)return;
+  sectionDrag=null;
+  controls.enabled=true;
+  start=null;
+  event.stopImmediatePropagation();
+}
+canvas.addEventListener('pointerup',endSectionDrag,true);
+canvas.addEventListener('pointercancel',endSectionDrag,true);
+element('section-model').onclick=()=>{if(bounds)setSection(bounds);};
+element('section-selection').onclick=()=>setSection(selectionBounds());
+element('section').onchange=updateSection;
 element('element-search').oninput=drawTree;
 element('tree-group').onchange=drawTree;
-element('focus').onclick=()=>{if(selected){const box=new THREE.Box3();for(const p of byElement.get(selected.userData.id))box.expandByObject(p);frame(box);}};
-element('hide').onclick=()=>{if(selected){byElement.get(selected.userData.id).forEach(p=>p.visible=false);select(null);updateVisibility();}};
-element('isolate').onclick=()=>{if(selected){group.children.forEach(p=>p.visible=p.userData.id===selected.userData.id);updateVisibility();}};
+element('focus').onclick=()=>{if(selected){frame(selectionBounds());}};
+element('hide').onclick=()=>{if(selected){for(const id of selectedIds)byElement.get(id).forEach(p=>p.visible=false);select(null);updateVisibility();}};
+element('isolate').onclick=()=>{if(selected){group.children.forEach(p=>p.visible=selectedIds.has(p.userData.id));updateVisibility();}};
 element('show').onclick=()=>{group.children.forEach(p=>p.visible=true);updateVisibility();};
-element('edges').onclick=()=>{selectionEdges=!selectionEdges;element('edges').setAttribute('aria-pressed',String(selectionEdges));select(selected);};
-element('section').onchange=element('axis').onchange=element('cut').oninput=updateSection;
+element('edges').onclick=()=>{selectionEdges=!selectionEdges;element('edges').setAttribute('aria-pressed',String(selectionEdges));const ids=[...selectedIds];select(null);for(const id of ids)select(byElement.get(id)[0],true);};
 load(true);
