@@ -207,7 +207,7 @@ renderer.domElement.addEventListener('pointerup',e=>{
   cursor.set((e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2);
   ray.setFromCamera(cursor,camera);
   const hit=ray.intersectObjects(group.children,false).find(hit=>hit.object.visible&&(!element('section').checked||sectionBounds.containsPoint(hit.point)));if(!hit)return;
-  if(!measuring){select(hit.object,e.shiftKey);const item=api.GetLine(modelId,hit.object.userData.id);ui.status.textContent=(item?.Name?.value||'IFC element')+' Â· #'+hit.object.userData.id;return;}
+  if(!measuring){select(hit.object,e.shiftKey);pivotOnSelection();const item=api.GetLine(modelId,hit.object.userData.id);ui.status.textContent=(item?.Name?.value||'IFC element')+' Â· #'+hit.object.userData.id;return;}
   points.push(hit.point.clone());
   const dot=new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),new THREE.MeshBasicMaterial({color:0xffcd69,depthTest:false}));dot.position.copy(hit.point);marks.add(dot);
   if(points.length===1){ui.status.textContent='Select the second measurement point.';return;}
@@ -542,7 +542,7 @@ function drawTree(){
       if(!details.open||details.children.length>1)return;
       for(const item of entries){
         const button=document.createElement('button');button.type='button';button.textContent=item.name+' Â· #'+item.id;
-        button.onclick=event=>{const parts=byElement.get(item.id);parts.forEach(p=>p.visible=true);select(parts[0],event.shiftKey);updateVisibility();};
+        button.onclick=event=>{const parts=byElement.get(item.id);parts.forEach(p=>p.visible=true);select(parts[0],event.shiftKey);pivotOnSelection();updateVisibility();};
         details.append(button);
       }
     });
@@ -602,6 +602,13 @@ function selectionBounds(){
   const box=new THREE.Box3();
   for(const id of selectedIds)for(const part of byElement.get(id))box.expandByObject(part);
   return box;
+}
+function pivotOnSelection(){
+  const box=selectionBounds();
+  if(!box.isEmpty()){
+    box.getCenter(controls.target);
+    controls.update();
+  }
 }
 function setSection(box){
   if(!bounds||box.isEmpty())return;
